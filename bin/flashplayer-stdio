@@ -1,0 +1,166 @@
+#!/usr/bin/env node
+
+var ChildProcess = require("child_process")
+var FS = require("fs")
+var HTTP = require("http")
+var Net = require("net")
+var Path = require("path")
+var URL = require("url")
+
+var FLASHPLAYER_PROGRAM = "flashplayer"
+var flashplayer_process
+
+function debug(message) {
+  // console.warn("flashplayer-stdio: " + message)
+}
+
+process.stdin.pause()
+
+process.on("SIGINT", function () {
+  process.stderr.write("\n")
+  process.exit(1)
+})
+
+process.on("exit", function () {
+  if (flashplayer_process) {
+    flashplayer_process.kill()
+  }
+})
+
+function fatal_error(error) {
+  console.error("flashplayer-stdio: " + error.message)
+  process.exit(1)
+}
+
+if (process.argv.length === 3) {
+  run_swf(process.argv[2])
+} else {
+  console.error("Usage: flashplayer-stdio FILENAME.swf")
+  process.exit(1)
+}
+
+function run_swf(filename) {
+  var swf_file = FS.createReadStream(filename)
+
+  swf_file.pause()
+  swf_file.on("error", fatal_error)
+
+  open_http_server({
+    "GET /": function (request, response) {
+      response.writeHead(200, {
+        "content-type": "application/x-shockwave-flash"
+      })
+
+      debug("Sending " + filename)
+
+      swf_file.pipe(response)
+      swf_file.resume()
+    },
+    "POST /": function (request, response, errback) {
+      slurp(request, function (data) {
+        if (data.match(/^\d+$/)) {
+          process.exit(parseInt(data))
+        } else {
+          errback("Bad exit status: " + data)
+        }
+      })
+    }
+  }, function (http_port) {
+    open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
+      run_flashplayer("http://localhost:" + http_port, {
+        stdin: stdin_port,
+        stdout: stdout_port,
+        stderr: stderr_port
+      })
+    })
+  })
+}
+
+function run_flashplayer(swf_url, parameters) {
+  var url = swf_url + "?" + require("querystring").stringify(parameters)
+
+  debug(FLASHPLAYER_PROGRAM + " " + url)
+
+  flashplayer_process = ChildProcess.spawn(FLASHPLAYER_PROGRAM, [url])
+
+  flashplayer_process.stderr.on("data", log_output)
+  flashplayer_process.stdout.on("data", log_output)
+
+  function log_output(data) {
+    console.warn("flashplayer: " + data)
+  }
+
+  flashplayer_process.on("error", fatal_error)
+  flashplayer_process.on("exit", process.exit)
+}
+
+function slurp(stream, callback) {
+  var result = ""
+
+  stream.on("data", function (data) { result += data })
+  stream.on("end", function () { callback(result) })
+}
+
+function open_http_server(routes, callback) {
+  var server = HTTP.createServer(function (request, response) {
+    var action = request.method + " " + URL.parse(request.url).pathname
+
+    debug("HTTP " + action)
+
+    if (action in routes) {
+      routes[action].call(server, request, response, fail)
+    } else {
+      fail("unexpected")
+    }
+
+    function fail(message) {
+      fatal_error(new Error("HTTP " + action + ": " + message))
+    }
+  })
+
+  callback(listen_to_random_open_port(server))
+}
+
+function open_stdio_servers(callback) {
+  callback(
+    open_server(function (socket) {
+      process.stdin.pipe(socket)
+      process.stdin.resume()
+    }),
+    open_server(function (socket) {
+      socket.pipe(process.stdout)
+    }),
+    open_server(function (socket) {
+      socket.pipe(process.stderr)
+    })
+  )
+}
+
+function open_server(callback) {
+  return listen_to_random_open_port(Net.createServer(callback))
+}
+
+function get_random_integer(min, max) {
+  return min + Math.floor(Math.random() * (max - min))
+}
+
+function get_random_port() {
+  // Standard IANA dynamic port range.
+  return get_random_integer(0xc000, 0x10000)
+}
+
+function listen_to_random_open_port(server) {
+  try {
+    var port = get_random_port()
+
+    server.listen(port)
+
+    return port
+  } catch (error) {
+    if (error.errno === require("constants").EADDRINUSE) {
+      return listen_to_random_open_port(server)
+    } else {
+      throw error
+    }
+  }
+}
