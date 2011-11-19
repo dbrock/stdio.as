@@ -7,12 +7,11 @@ var Net = require("net")
 var Path = require("path")
 var URL = require("url")
 
-var FLASHPLAYER_PROGRAM = "flashplayer"
-var flashplayer_process
-
-function debug(message) {
-  // console.warn("flashplayer-stdio: " + message)
-}
+var FLASHPLAYER_PROGRAM_GETTERS = [
+  get_FLASHPLAYER_program,
+  get_osx_flash_player_debugger_app_program,
+  get_osx_flash_player_app_program
+]
 
 process.stdin.pause()
 
@@ -21,16 +20,13 @@ process.on("SIGINT", function () {
   process.exit(1)
 })
 
+var flashplayer_process
+
 process.on("exit", function () {
   if (flashplayer_process) {
     flashplayer_process.kill()
   }
 })
-
-function fatal_error(error) {
-  console.error("flashplayer-stdio: " + error.message)
-  process.exit(1)
-}
 
 if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
@@ -78,21 +74,23 @@ function run_swf(filename, argv) {
 }
 
 function run_flashplayer(swf_url, parameters) {
-  var url = swf_url + "?" + require("querystring").stringify(parameters)
+  get_flashplayer_program(function (flashplayer_program) {
+    var url = swf_url + "?" + require("querystring").stringify(parameters)
 
-  debug(FLASHPLAYER_PROGRAM + " " + url)
+    debug(flashplayer_program + " " + url)
 
-  flashplayer_process = ChildProcess.spawn(FLASHPLAYER_PROGRAM, [url])
+    flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
 
-  flashplayer_process.stderr.on("data", log_output)
-  flashplayer_process.stdout.on("data", log_output)
+    flashplayer_process.stderr.on("data", log_output)
+    flashplayer_process.stdout.on("data", log_output)
 
-  function log_output(data) {
-    console.warn("flashplayer: " + data)
-  }
+    function log_output(data) {
+      console.warn("flashplayer: " + data)
+    }
 
-  flashplayer_process.on("error", fatal_error)
-  flashplayer_process.on("exit", process.exit)
+    flashplayer_process.on("error", fatal_error)
+    flashplayer_process.on("exit", process.exit)
+  })
 }
 
 function slurp(stream, callback) {
@@ -115,7 +113,7 @@ function open_http_server(routes, callback) {
     }
 
     function fail(message) {
-      fatal_error(new Error("HTTP " + action + ": " + message))
+      fatal_error("HTTP " + action + ": " + message)
     }
   })
 
@@ -163,5 +161,65 @@ function listen_to_random_open_port(server) {
     } else {
       throw error
     }
+  }
+}
+
+function get_flashplayer_program(callback) {
+  loop(0)
+
+  function loop(i) {
+    FLASHPLAYER_PROGRAM_GETTERS[i](function (program) {
+      if (program) {
+        callback(program)
+      } else {
+        if (i + 1 === FLASHPLAYER_PROGRAM_GETTERS.length) {
+          fatal_error("no flashplayer executable found")
+        } else {
+          loop(i + 1)
+        }
+      }
+    })
+  }
+}
+
+function get_osx_flash_player_debugger_app_program(callback) {
+  get_osx_app_program("Flash Player Debugger", callback)
+}
+
+function get_osx_flash_player_app_program(callback) {
+  get_osx_app_program("Flash Player", callback)
+}
+
+function get_osx_app_program(name, callback) {
+  get_program(
+    "/Applications/" + name + ".app/Contents/MacOS/" + name,
+    callback
+  )
+}
+
+function get_FLASHPLAYER_program(callback) {
+  if (process.env.FLASHPLAYER) {
+    get_program(process.env.FLASHPLAYER, callback)
+  } else {
+    callback(null)
+  }
+}
+
+function get_program(filename, callback) {
+  Path.exists(filename, function (exists) {
+    callback(exists ? filename : null)
+  })
+}
+
+function fatal_error(error) {
+  var message = error instanceof Error ? error.message : error
+
+  console.error("flashplayer-stdio: " + message)
+  process.exit(1)
+}
+
+function debug(message) {
+  if (process.env.DEBUG) {
+    console.warn("flashplayer-stdio: " + message)
   }
 }
