@@ -11,23 +11,6 @@ normal Unix process.  Specifically, it provides the ability to
 * exit with an arbitrary status code.
 
 
-Installation
-------------
-
-To use this package, you need two things:
-
-* Node.js,
-* a standalone Flash Player.
-
-If you are on OS X, you can install Node.js using Homebrew:
-
-    $ brew install node
-
-The Flex SDK comes equipped with a standalone Flash Player, located in
-the `runtimes/player` directory.  If you are on OS X, simply unzip the
-application and move it to `/Applications`.
-
-
 Example
 -------
 
@@ -49,6 +32,23 @@ To run your SWF, use the `flashplayer-stdio` wrapper:
     Hello, World!
     $ flashplayer-stdio hello.swf Galaxy
     Hello, Galaxy!
+
+
+Installation
+------------
+
+To use this package, you need two things:
+
+* Node.js,
+* a standalone Flash Player.
+
+If you are on OS X, you can install Node.js using Homebrew:
+
+    $ brew install node
+
+The Flex SDK comes equipped with a standalone Flash Player, located in
+the `runtimes/player` directory.  If you are on OS X, simply unzip the
+application and move it to `/Applications`.
 
 
 Basic API
