@@ -32,14 +32,14 @@ function fatal_error(error) {
   process.exit(1)
 }
 
-if (process.argv.length === 3) {
-  run_swf(process.argv[2])
+if (process.argv.length >= 3) {
+  run_swf(process.argv[2], process.argv.slice(3))
 } else {
   console.error("Usage: flashplayer-stdio FILENAME.swf")
   process.exit(1)
 }
 
-function run_swf(filename) {
+function run_swf(filename, argv) {
   var swf_file = FS.createReadStream(filename)
 
   swf_file.pause()
@@ -70,7 +70,8 @@ function run_swf(filename) {
       run_flashplayer("http://localhost:" + http_port, {
         stdin: stdin_port,
         stdout: stdout_port,
-        stderr: stderr_port
+        stderr: stderr_port,
+        argv: argv.map(encodeURIComponent).join(" ")
       })
     })
   })

@@ -4,8 +4,11 @@ package {
   public class test extends Process {
     override public function main(): void {
       gets(function (line: String): void {
-        puts("stdout:" + line)
-        warn("stderr:" + line)
+        const message: String = argv.join(",") + ":" + line
+
+        puts("stdout:" + message)
+        warn("stderr:" + message)
+
         exit(parseInt(line))
       })
     }
