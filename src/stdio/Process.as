@@ -1,6 +1,6 @@
 package stdio {
   import flash.display.Sprite
-  import flash.events.UncaughtErrorEvent
+  import flash.events.*
   import flash.net.*
 
   public class Process extends Sprite {
@@ -14,7 +14,7 @@ package stdio {
     public function Process() {
       instance = this
       connect(function (): void {
-        handle_uncaught_errors()
+        listen_for_uncaught_errors()
         main()
       })
     }
@@ -64,13 +64,25 @@ package stdio {
     public function get stdout(): OutputStream { return stdout_socket }
     public function get stderr(): OutputStream { return stderr_socket }
 
-    private function handle_uncaught_errors(): void {
+    private function listen_for_uncaught_errors(): void {
       loaderInfo.uncaughtErrorEvents.addEventListener(
         UncaughtErrorEvent.UNCAUGHT_ERROR,
-        function (event: UncaughtErrorEvent): void {
-          warn(event.error.stack)
-        }
+        handle_uncaught_error_event
       )
+    }
+
+    protected function handle_uncaught_error_event(
+      event: UncaughtErrorEvent
+    ): void {
+      event.preventDefault()
+
+      if (event.error is Error) {
+        warn((event.error as Error).getStackTrace())
+      } else {
+        warn(event.error)
+      }
+
+      exit(1)
     }
 
     private function connect(callback: Function): void {
