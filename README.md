@@ -91,7 +91,7 @@ Low-level API
 If you need more fine-grained control than what is provided by the
 regular line-based API, you may access the stream objects directly:
 
-    // Retreive the underlying standard IO streams.
+    // Retreive the underlying IO streams.
     function get stdin(): InputStream
     function get stdout(): OutputStream
     function get stderr(): OutputStream
@@ -117,3 +117,13 @@ regular line-based API, you may access the stream objects directly:
 How It Works
 ------------
 
+The `flashplayer-stdio` wrapper works by first setting up some servers
+listening to random available TCP ports on localhost:
+
+* one web server, for serving the SWF and accepting commands (like
+  "exit the process");
+* three raw TCP servers, for piping stdin, stdout and stderr through.
+
+It then starts Flash Player, passing the port numbers as query string
+parameters to the SWF.  When the SWF loads, the Process constructor
+connects to all the servers, and then invokes the `main` method.
