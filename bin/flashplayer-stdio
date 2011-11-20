@@ -160,42 +160,45 @@ function slurp(stream, callback) {
 }
 
 function open_http_server(routes, callback) {
-  var server = HTTP.createServer(function (request, response) {
-    var action = request.method + " " + URL.parse(request.url).pathname
+  bind_server(
+    HTTP.createServer(function (request, response) {
+      var action = request.method + " " + URL.parse(request.url).pathname
 
-    debug("HTTP " + action)
+      debug("HTTP " + action)
 
-    if (action in routes) {
-      routes[action].call(server, request, response, fail)
-    } else {
-      fail("unexpected")
-    }
+      if (action in routes) {
+        routes[action](request, response, fail)
+      } else {
+        fail("unexpected")
+      }
 
-    function fail(message) {
-      fatal_error("HTTP " + action + ": " + message)
-    }
-  })
-
-  callback(listen_to_random_open_port(server))
-}
-
-function open_stdio_servers(callback) {
-  callback(
-    open_server(function (socket) {
-      process.stdin.pipe(socket)
-      process.stdin.resume()
+      function fail(message) {
+        fatal_error("HTTP " + action + ": " + message)
+      }
     }),
-    open_server(function (socket) {
-      socket.pipe(process.stdout)
-    }),
-    open_server(function (socket) {
-      socket.pipe(process.stderr)
-    })
+    callback
   )
 }
 
-function open_server(callback) {
-  return listen_to_random_open_port(Net.createServer(callback))
+function open_stdio_servers(callback) {
+  open_server(function (socket) {
+    process.stdin.pipe(socket)
+    process.stdin.resume()
+  }, function (stdin_porn) {
+    open_server(function (socket) {
+      socket.pipe(process.stdout)
+    }, function (stdout_port) {
+      open_server(function (socket) {
+        socket.pipe(process.stderr)
+      }, function (stderr_port) {
+        callback(stdin_porn, stdout_port, stderr_port)
+      })
+    })
+  })
+}
+
+function open_server(handler, callback) {
+  return bind_server(Net.createServer(handler), callback)
 }
 
 function get_random_integer(min, max) {
@@ -207,19 +210,24 @@ function get_random_port() {
   return get_random_integer(0xc000, 0x10000)
 }
 
-function listen_to_random_open_port(server) {
-  try {
-    var port = get_random_port()
+function bind_server(server, callback) {
+  var port = get_random_port()
 
-    server.listen(port)
-
-    return port
-  } catch (error) {
-    if (error.errno === require("constants").EADDRINUSE) {
-      return listen_to_random_open_port(server)
+  server.on("error", function (error) {
+    if (error.code == "EADDRINUSE") {
+      retry()
     } else {
       throw error
     }
+  })
+
+  server.listen(port, function () {
+    callback(port)
+  })
+
+  function retry() {
+    server.close()
+    bind_server(server, callback)
   }
 }
 
