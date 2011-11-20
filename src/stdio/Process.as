@@ -24,12 +24,36 @@ package stdio {
     }
 
     public function exit(status: int = 0): void {
-      const request: URLRequest = new URLRequest(loaderInfo.loaderURL)
+      post("exit", status.toString())
+    }
+
+    private function get base_url(): String {
+      // XXX: Not very robust.
+      return loaderInfo.loaderURL.replace(/\?.*/, "") + "/"
+    }
+
+    private function post(
+      path: String,
+      content: String,
+      callback: Function = null
+    ): void {
+      const request: URLRequest = new URLRequest(base_url + path)
 
       request.method = "POST"
-      request.data = status.toString()
+      request.data = content
 
-      new URLLoader().load(request)      
+      const loader: URLLoader = new URLLoader
+
+      if (callback !== null) {
+        loader.addEventListener(
+          Event.COMPLETE,
+          function (event: Event): void {
+            callback(loader.data)
+          }
+        )
+      }
+
+      loader.load(request)
     }
 
     public function get argv(): Array {
@@ -76,13 +100,15 @@ package stdio {
     ): void {
       event.preventDefault()
 
-      if (event.error is Error) {
-        warn((event.error as Error).getStackTrace())
-      } else {
-        warn(event.error)
-      }
-
-      exit(1)
+      post(
+        "error", 
+        event.error is Error
+          ? (event.error as Error).getStackTrace()
+          : event.error,
+        function (response: String): void {
+          exit(1)
+        }
+      )
     }
 
     private function connect(callback: Function): void {
