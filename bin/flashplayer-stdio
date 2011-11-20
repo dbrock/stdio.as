@@ -23,10 +23,19 @@ process.on("SIGINT", function () {
 var flashplayer_process
 
 process.on("exit", function () {
+  kill_flashplayer()
+})
+
+process.on("uncaughtException", function (error) {
+  kill_flashplayer()
+  console.log(error.stack)
+})
+
+function kill_flashplayer() {
   if (flashplayer_process) {
     flashplayer_process.kill()
   }
-})
+}
 
 if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
