@@ -13,10 +13,15 @@ package stdio {
 
     public function Process() {
       instance = this
-      connect(function (): void {
-        listen_for_uncaught_errors()
+
+      if (get_parameter("stdin")) {
+        connect(function (): void {
+          listen_for_uncaught_errors()
+          main()
+        })
+      } else {
         main()
-      })
+      }
     }
 
     public function main(): void {
