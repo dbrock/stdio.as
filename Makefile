@@ -1,4 +1,5 @@
 build:
-	fcshc src/test.as --no-flex -X -debug
+	fcshc src/test_bare.as --no-flex
+	fcshc src/test_flex.mxml
 test: build
 	node test.js

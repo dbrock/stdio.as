@@ -1,7 +1,7 @@
 package {
   import stdio.Process
 
-  public class test extends Process {
+  public class test_bare extends Process {
     override public function main(): void {
       gets(function (line: String): void {
         const message: String = argv.join(",") + ":" + line
