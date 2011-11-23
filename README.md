@@ -64,6 +64,9 @@ To run an stdio-enabled SWF, use the `flashplayer-stdio` wrapper:
     $ flashplayer-stdio hello_process_flex.swf Galaxy
     Hello, Galaxy!
 
+Unfortunately, I know of no way to suppress the Flash Player window,
+regardless of whether your program actually displays any graphics.
+
 
 Installation
 ------------
