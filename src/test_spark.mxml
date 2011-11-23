@@ -1,8 +1,10 @@
 <ProcessSparkApplication
     xmlns:fx="http://ns.adobe.com/mxml/2009"
-    xmlns="stdio.*"
-    processReady="process.puts('foo'), process.exit(123)">
-  <fx:Script>
-    import stdio.*
-  </fx:Script>
+    xmlns="stdio.*">
+  <processReady>
+    import stdio.process
+
+    process.puts("foo")
+    process.exit(123)
+  </processReady>
 </ProcessSparkApplication>

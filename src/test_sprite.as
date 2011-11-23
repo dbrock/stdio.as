@@ -1,5 +1,6 @@
 package {
-  import stdio.*
+  import stdio.ProcessSprite
+  import stdio.process
 
   public class test_sprite extends ProcessSprite {
     override public function main(): void {

@@ -7,10 +7,12 @@ package stdio {
     public function ProcessSprite() {
       setup(loaderInfo.parameters, main)
 
-      loaderInfo.uncaughtErrorEvents.addEventListener(
-        UncaughtErrorEvent.UNCAUGHT_ERROR,
-        UnixProcess(process).handle_uncaught_error_event
-      )
+      if (process is UnixProcess) {
+        loaderInfo.uncaughtErrorEvents.addEventListener(
+          UncaughtErrorEvent.UNCAUGHT_ERROR,
+          UnixProcess(process).handle_uncaught_error_event
+        )
+      }
     }
 
     public function main(): void {
