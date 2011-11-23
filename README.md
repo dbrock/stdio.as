@@ -10,27 +10,58 @@ normal Unix process.  Specifically, it provides the ability to
 * write to standard error,
 * exit with an arbitrary status code.
 
+It also by default mutes the standard runtime error dialogs, instead
+reformatting stack traces of uncaught errors to GCC-like error message
+syntax and sending them to stderr.  By flipping a switch, you can make
+your process kill itself when an uncaught error occurs.
+
+Implementations are available for Flex 4 apps and pure Flash apps.
+
 
 Example
 -------
 
-The basic program boilerplate looks like this:
+Your basic bare-metal (pure Flash) process looks like this:
 
     package {
-      import stdio.Process
+      import stdio.ProcessSprite
+      import stdio.process
     
-      public class hello extends Process {
+      public class hello_process extends ProcessSprite {
         override public function main(): void {
-          puts("Hello, " + (argv[0] || "World") + "!")
+          process.puts("Hello, " + (process.argv[0] || "World") + "!")
         }
       }
     }
 
-To run your SWF, use the `flashplayer-stdio` wrapper:
+Here is the equivalent as a Spark application:
 
-    $ flashplayer-stdio hello.swf
+    <stdio:ProcessSparkApplication
+        xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:stdio="stdio.*"
+        processReady="main()">
+      <fx:Script>
+        import stdio.process
+    
+        private function main(): void {
+          process.puts("Hello, " + (process.argv[0] || "World") + "!")
+        }
+      </fx:Script>
+    </stdio:ProcessSparkApplication>
+
+Remembering to first add `flashplayer-stdio/src` to the source path,
+you can simply compile these applications as usual:
+
+    $ fcshc hello_process.as ../flashplayer-stdio/src
+    $ fcshc hello_process_flex.mxml ../flashplayer-stdio/src
+
+(See http://github.com/dbrock/fcshd for more information.)
+
+To run an stdio-enabled SWF, use the `flashplayer-stdio` wrapper:
+
+    $ flashplayer-stdio hello_process.swf
     Hello, World!
-    $ flashplayer-stdio hello.swf Galaxy
+    $ flashplayer-stdio hello_process_flex.swf Galaxy
     Hello, Galaxy!
 
 
@@ -51,65 +82,68 @@ the `runtimes/player` directory.  If you are on OS X, simply unzip the
 application and move it to `/Applications`.
 
 
-Basic API
----------
+Process API
+-----------
 
-The following methods are defined on processes:
+The global variable `stdio.process` contains an object implementing
+the following interface:
 
-    // Retreive the command-line arguments of the process.
-    function get argv(): Array
-
-    // Read one line from standard input.
-    function gets(callback: Function): void
-
-    // Write something to standard output followed by a newline.
-    function puts(value: Object): void
-
-    // Write something to standard error followed by a newline.
-    function warn(value: Object): void
-
-    // Exit the process with the given status code.
-    function exit(code: int = 0): void
-
-For convenience, `gets`, `puts`, and `warn` are also available
-directly as global functions from anywhere in the program:
-
-    package foo {
-      import stdio.warn
-
-      public function debug(message: String): void {
-        warn("debug: " + message)
-      }
+    public interface IProcess {
+      // Whether or not we are running as a Unix process.
+      // If not, most other methods will throw exeptions.
+      function get stdio(): Boolean
+  
+      // The command-line arguments to the process (not
+      // including the name of the SWF).
+      function get argv(): Array
+  
+      // Read one line from standard input and pass it to
+      // the callback (after chopping off the newline).
+      function gets(callback: Function): void
+      function get stdin(): InputStream
+  
+      // Write something + newline to standard output.
+      function puts(value: Object): void
+      function get stdout(): OutputStream
+  
+      // Like puts, but for standard error.
+      function warn(value: Object): void
+      function get stderr(): OutputStream
+  
+      // Exit the process with the given status code.
+      function exit(status: int = 0): void
+  
+      // Whether uncaught errors are dumped to stderr.
+      function get whiny(): Boolean
+      function set whiny(value: Boolean): void
+  
+      // Whether an uncaught error kills the process.
+      function get immortal(): Boolean
+      function set immortal(value: Boolean): void
     }
 
-The process object itself is available globally as `Process.instance`.
 
 
-Low-level API
--------------
+Low-level Stream API
+--------------------
 
 If you need more fine-grained control than what is provided by the
-regular line-based API, you may access the stream objects directly:
+regular line-based API, you can access the stream objects directly:
 
-    // Retreive the underlying IO streams.
-    function get stdin(): InputStream
-    function get stdout(): OutputStream
-    function get stderr(): OutputStream
-
-    interface InputStream {
-      // Wait for any amount of data to become available.
+    public interface InputStream {
+      // Whether any data is available.
+      function get ready(): Boolean
+  
+      // Wait for data to become available.
       function read(callback: Function): void
-
+  
       // Wait for one line of data to become available.
-      function read_line(callback: Function): void
-
-      // Just read whatever is available right now.
-      function read_sync(): String
+      function gets(callback: Function): void
     }
 
-    interface OutputStream {
+    public interface OutputStream {
+      function puts(value: Object): void
       function write(value: Object): void
-      function write_line(value: Object): void
       function close(): void
     }
 
@@ -120,10 +154,11 @@ How It Works
 The `flashplayer-stdio` wrapper works by first setting up some servers
 listening to random available TCP ports on localhost:
 
-* one web server, for serving the SWF and accepting commands (like
-  "exit the process");
-* three raw TCP servers, for piping stdin, stdout and stderr through.
+* one web server, for serving the SWF and accepting commands;
+* three raw TCP servers, for piping stdin, stdout and stderr.
 
-It then starts Flash Player, passing the port numbers as query string
-parameters to the SWF.  When the SWF loads, the Process constructor
-connects to all the servers, and then invokes the `main` method.
+It then starts Flash Player, passing the URL and port numbers as query
+parameters to the SWF.  At initialization time, the runtime library
+parses the parameters and connects to the sockets, and finally either
+invokes your `main()` method (for Flash applications) or dispatches a
+`processReady` event (for Flex applications).

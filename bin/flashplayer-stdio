@@ -78,10 +78,13 @@ function run_swf(filename, argv) {
     }
   }, function (http_port) {
     open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
-      run_flashplayer("http://localhost:" + http_port, {
-        stdin: stdin_port,
-        stdout: stdout_port,
-        stderr: stderr_port,
+      var url = "http://localhost:" + http_port
+
+      run_flashplayer(url, {
+        stdio_url: url,
+        stdin_port: stdin_port,
+        stdout_port: stdout_port,
+        stderr_port: stderr_port,
         argv: argv.map(encodeURIComponent).join(" ")
       })
     })
