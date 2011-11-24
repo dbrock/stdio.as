@@ -1,4 +1,6 @@
 package stdio {
+  import flash.utils.setTimeout
+
   internal class NullProcess implements IProcess {
     public function get stdio(): Boolean {
       return false
@@ -10,6 +12,10 @@ package stdio {
 
     public function get immortal(): Boolean {
       return true
+    }
+
+    public function dump(error: Error): void {
+      setTimeout(function (): void { throw error }, 0)
     }
   
     public function get argv(): Array {throw new Error}

@@ -90,7 +90,13 @@ package stdio {
     // -----------------------------------------------------
 
     public function exit(status: int = 0): void {
-      http_post("/exit", status.toString())
+      when_ready(function (): void {
+        http_post("/exit", status.toString())
+      })
+    }
+
+    public function dump(error: Error): void {
+      http_post("/error", error.getStackTrace())
     }
 
     // See below for http_post().
@@ -117,32 +123,38 @@ package stdio {
       event.preventDefault()
 
       if (whiny) {
-        log_error(event.error, callback)
+        if (event.error is Error) {
+          dump(event.error as Error)
+        } else {
+          dump(new Error("Uncaught error: " + event.error))
+        }
+      }
+
+      if (!immortal) {
+        exit(1)
+      }
+    }
+
+    private var n_pending_requests: int = 0
+    private var ready_callbacks: Array = []
+
+    private function when_ready(callback: Function): void {
+      if (n_pending_requests === 0) {
+        callback()
       } else {
+        ready_callbacks.push(callback)
+      }
+    }
+
+    private function handle_ready(): void {
+      for each (var callback: Function in ready_callbacks) {
         callback()
       }
 
-      function callback(): void {
-        if (!immortal) {
-          exit(1)
-        }
-      }
+      ready_callbacks = []
     }
 
-    private function log_error(error: Object, callback: Function): void {
-      const message: String = error is Error
-        // Important: avoid the "Error(event.error)" syntax.
-        ? (error as Error).getStackTrace()
-        : "" + error
-
-      http_post("/error", message, callback)
-    }
-
-    private function http_post(
-      path: String,
-      content: String,
-      callback: Function = null
-    ): void {
+    private function http_post(path: String, content: String): void {
       const request: URLRequest = new URLRequest(get_url(path))
 
       request.method = "POST"
@@ -150,14 +162,16 @@ package stdio {
 
       const loader: URLLoader = new URLLoader
 
-      if (callback !== null) {
-        loader.addEventListener(
-          Event.COMPLETE,
-          function (event: Event): void {
-            callback(loader.data)
+      ++n_pending_requests
+
+      loader.addEventListener(
+        Event.COMPLETE,
+        function (event: Event): void {
+          if (--n_pending_requests === 0) {
+            handle_ready()
           }
-        )
-      }
+        }
+      )
 
       loader.load(request)
     }
