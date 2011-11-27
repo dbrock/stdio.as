@@ -1,55 +1,78 @@
 var assert = require("assert")
-var ChildProcess = require("child_process")
-var HTTP = require("http")
 
-// ---------------------------------------------------------
+function test_local(swf) {
+  var stdin_line = "hello"
+  var exit_code = 123
 
-ChildProcess.exec(
-  "echo 123 | bin/flashplayer-stdio test_sprite.swf foo bar",
-  function (error, stdout, stderr) {
-    assert.equal(stdout, "stdout:foo,bar:123\n")
-    assert.equal(stderr, "stderr:foo,bar:123\n")
-    assert.equal(error.code, 123)
-    console.log("Sprite OK.")
-  }
-)
+  require("child_process").exec([
+    "echo", stdin_line, "|",
+    "bin/flashplayer-stdio", swf, exit_code
+  ].join(" "), function (error, stdout, stderr) {
+    test(swf, function () {
+      assert.equal(stdout, stdin_line + "\n")
+      assert.equal(stderr, stdin_line.toUpperCase() + "\n")
+      assert.equal(error.code, exit_code)
+    })
+  })
+}
 
-// ---------------------------------------------------------
+function test_web(swf, port) {
+  var flashplayer, timeout
 
-ChildProcess.exec(
-  "bin/flashplayer-stdio test_spark.swf",
-  function (error, stdout, stderr) {
-    assert.equal(stdout, "foo\n")
-    console.log("Application OK.")
-  }
-)
-
-// ---------------------------------------------------------
-
-var FLASHPLAYER = "/Applications/Flash Player Debugger.app/Contents/MacOS/Flash Player Debugger"
-
-function test_unplugged(swf, port, name) {
-  var flashplayer = ChildProcess.spawn(
-    FLASHPLAYER, [swf + "?port=" + port]
-  )
-  
-  HTTP.createServer(function () {
-    console.log(name + " OK.")
-  
+  require("http").createServer(function () {
+    test_passed(swf)
     flashplayer.kill()
     clearTimeout(timeout)
     this.close()
-  }).listen(port)
-  
-  var timeout = setTimeout(function () {
-    assert.fail("Error: " + name + " timed out")
-  }, 5000)
+  }).listen(port, function () {
+    flashplayer = start_flashplayer(swf, { port: port })    
+    timeout = setTimeout(function () {
+      test(swf, function () {
+        assert.fail("timeout")
+      })
+    }, 5000)
+  })
 }
 
-test_unplugged(
-  "test_sprite_unplugged.swf", 56788, "Unplugged Sprite"
-)
+function start_flashplayer(swf, parameters) {
+  var executable = "/Applications/Flash Player Debugger.app/" +
+    "Contents/MacOS/Flash Player Debugger"
 
-test_unplugged(
-  "test_spark_unplugged.swf", 56789, "Unplugged Application"
-)
+  return require("child_process").spawn(executable, [
+    swf + "?" + stringify_query_parameters(parameters || {})
+  ])
+}
+
+function stringify_query_parameters(parameters) {
+  return Object.keys(parameters || {}).map(function (name) {
+    return name + "=" + parameters[name]
+  }).join("&")
+}
+
+//----------------------------------------------------------
+
+function test(name, callback) {
+  try {
+    callback()
+    test_passed(name)
+  } catch (error) {
+    test_failed(name)
+    throw error
+  }
+}
+
+function test_passed(name) {
+  console.log("OK " + name)
+}
+
+function test_failed(name) {
+  console.log("FAIL " + name)
+}
+
+//----------------------------------------------------------
+
+test_web("test_web_flash.swf", 56788)
+test_web("test_web_flex.swf", 56789)
+
+test_local("test_local_flash.swf")
+test_local("test_local_flex.swf")

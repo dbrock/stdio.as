@@ -1,7 +1,7 @@
 build:
-	fcshc src/test_sprite.as --no-flex
-	fcshc src/test_sprite_unplugged.as --no-flex
-	fcshc src/test_spark.mxml
-	fcshc src/test_spark_unplugged.mxml
+	fcshc src/test_local_flash.as --no-flex
+	fcshc src/test_local_flex.mxml
+	fcshc src/test_web_flash.as --no-flex
+	fcshc src/test_web_flex.mxml
 test: build
 	node test.js

@@ -1,0 +1,4 @@
+<ProcessSparkApplication
+    xmlns:fx="http://ns.adobe.com/mxml/2009"
+    xmlns="stdio.*"
+    processReady="test_local()"/>
