@@ -28,7 +28,7 @@ process.on("exit", function () {
 
 process.on("uncaughtException", function (error) {
   kill_flashplayer()
-  console.log(error.stack)
+  console.log("flashplayer-stdio: internal error: " + error.stack)
 })
 
 function kill_flashplayer() {
