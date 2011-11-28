@@ -214,24 +214,19 @@ function get_random_port() {
 }
 
 function bind_server(server, callback) {
-  var port = get_random_port()
-
   server.on("error", function (error) {
     if (error.code == "EADDRINUSE") {
-      retry()
+      bind_server(server, callback)
     } else {
       throw error
     }
   })
 
+  var port = get_random_port()
+
   server.listen(port, function () {
     callback(port)
   })
-
-  function retry() {
-    server.close()
-    bind_server(server, callback)
-  }
 }
 
 function get_flashplayer_program(callback) {
