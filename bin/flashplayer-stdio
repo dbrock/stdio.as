@@ -119,6 +119,10 @@ function dump_runtime_error(data) {
 
       console.warn(content + padding + suffix)
     } else {
+      if (index === 0) {
+        console.warn("error: " + message)
+      }
+
       console.warn(line)
     }
   })
