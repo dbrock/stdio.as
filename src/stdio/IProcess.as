@@ -24,9 +24,6 @@ package stdio {
     // Exit the process with the given status code.
     function exit(status: int = 0): void
 
-    // Dump an error to stderr.
-    function dump(error: Error): void
-
     // Whether uncaught errors are dumped to stderr.
     function get whiny(): Boolean
     function set whiny(value: Boolean): void

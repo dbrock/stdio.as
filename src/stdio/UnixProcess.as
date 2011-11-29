@@ -95,7 +95,7 @@ package stdio {
       })
     }
 
-    public function dump(error: Error): void {
+    private function dump(error: Error): void {
       http_post("/error", error.getStackTrace())
     }
 
