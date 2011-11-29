@@ -99,6 +99,10 @@ package stdio {
       http_post("/error", error.getStackTrace())
     }
 
+    private function dump_async(event: ErrorEvent): void {
+      http_post("/async-error", event.toString())
+    }
+
     // See below for http_post().
 
     // -----------------------------------------------------
@@ -125,8 +129,10 @@ package stdio {
       if (whiny) {
         if (event.error is Error) {
           dump(event.error as Error)
+        } else if (event.error is ErrorEvent) {
+          dump_async(event.error as ErrorEvent)
         } else {
-          dump(new Error("Uncaught error: " + event.error))
+          // XXX: Anybody care about this case?
         }
       }
 

@@ -76,6 +76,12 @@ function run_swf(filename, argv) {
         dump_runtime_error(data)
         response.end()
       })
+    },
+    "POST /async-error": function (request, response, errback) {
+      slurp(request, function (data) {
+        dump_async_runtime_error(data)
+        response.end()
+      })
     }
   }, function (http_port) {
     open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
@@ -118,19 +124,37 @@ function dump_runtime_error(data) {
   })
 
   draw_horizontal_rule()
+  
+  function repeat(string, n) {
+    return new Array(n + 1).join(string)
+  }
+
+  function draw_horizontal_rule() {
+    console.warn(repeat("\u2014", 80))
+  }
 }
 
-function draw_horizontal_rule() {
-  console.warn(repeat("\u2014", 80))
+function dump_async_runtime_error(data) {
+  console.warn("error: " + get_pretty_async_error_message(data))
 }
 
-function repeat(string, n) {
-  return new Array(n + 1).join(string)
+function get_pretty_async_error_message(data) {
+  var match = data.trim().match(/^\[(\S+).*? text="(.*)"\]$/)
+
+  if (match) {
+    return get_pretty_error_message(match[1] + ": " + match[2])
+  } else {
+    return data
+  }
 }
 
 function get_pretty_error_message(message) {
+  var match
+
   if (message === "TypeError: Error #1009: Cannot access a property or method of a null object reference.") {
     return "null pointer"
+  } else if ((match = message.match(/^IOErrorEvent: Error #2032: Stream Error. URL: (.*)$/))) {
+    return "‘" + match[1] + "’ unavailable"
   } else {
     return message
   }
