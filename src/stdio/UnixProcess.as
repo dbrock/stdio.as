@@ -11,7 +11,11 @@ package stdio {
     }
 
     public function get stdio(): Boolean {
-      return parameters.stdio_url
+      return !!service_url
+    }
+
+    private function get service_url(): String {
+      return parameters["stdio.service"]
     }
 
     // -----------------------------------------------------
@@ -32,9 +36,9 @@ package stdio {
       stdin_socket.ondata = stdin_buffer.write
       stdin_socket.onclose = stdin_buffer.close
 
-      stdin_socket.connect("localhost", get_int("stdin_port"))
-      stdout_socket.connect("localhost", get_int("stdout_port"))
-      stderr_socket.connect("localhost", get_int("stderr_port"))
+      stdin_socket.connect("localhost", get_int("stdio.in"))
+      stdout_socket.connect("localhost", get_int("stdio.out"))
+      stderr_socket.connect("localhost", get_int("stdio.err"))
 
       function get_int(name: String): int {
         return parseInt(parameters[name])
@@ -50,7 +54,7 @@ package stdio {
     // -----------------------------------------------------
 
     public function get argv(): Array {
-      return parameters.argv.split(" ").map(
+      return parameters["stdio.argv"].split(" ").map(
         function (argument: String, ...rest: Array): String {
           return decodeURIComponent(argument)
         }
@@ -161,7 +165,7 @@ package stdio {
     }
 
     private function http_post(path: String, content: String): void {
-      const request: URLRequest = new URLRequest(get_url(path))
+      const request: URLRequest = new URLRequest(service_url + path)
 
       request.method = "POST"
       request.data = content
@@ -180,10 +184,6 @@ package stdio {
       )
 
       loader.load(request)
-    }
-
-    private function get_url(path: String): String {
-      return parameters.stdio_url + path
     }
   }
 }

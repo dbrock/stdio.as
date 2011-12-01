@@ -6,10 +6,17 @@ function test_local(swf) {
   var stdin_line = "hello"
   var exit_code = 123
 
+  var timeout = setTimeout(function () {
+    test(swf, function () {
+      assert.fail("timeout")
+    })
+  }, 5000)
+
   require("child_process").exec([
     "echo", stdin_line, "|",
     "bin/flashplayer-stdio", swf, exit_code
   ].join(" "), function (error, stdout, stderr) {
+    clearTimeout(timeout)
     test(swf, function () {
       assert.equal(stdout, stdin_line + "\n")
       assert.equal(stderr, stdin_line.toUpperCase() + "\n")

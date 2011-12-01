@@ -88,11 +88,11 @@ function run_swf(filename, argv) {
       var url = "http://localhost:" + http_port
 
       run_flashplayer(url, {
-        stdio_url: url,
-        stdin_port: stdin_port,
-        stdout_port: stdout_port,
-        stderr_port: stderr_port,
-        argv: argv.map(encodeURIComponent).join(" ")
+        "stdio.service": url,
+        "stdio.in": stdin_port,
+        "stdio.out": stdout_port,
+        "stdio.err": stderr_port,
+        "stdio.argv": argv.map(encodeURIComponent).join(" ")
       })
     })
   })
