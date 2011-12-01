@@ -49,11 +49,11 @@ Here is the equivalent as a Spark application:
       </fx:Script>
     </stdio:ProcessSparkApplication>
 
-Remembering to first add `flashplayer-stdio/src` to the source path,
-you can simply compile these applications as usual:
+Remembering to include `stdio.swc', you can simply compile these
+applications as usual:
 
-    $ fcshc hello_process.as ../flashplayer-stdio/src
-    $ fcshc hello_process_flex.mxml ../flashplayer-stdio/src
+    $ fcshc stdio.swc hello_process.as
+    $ fcshc stdio.swc hello_process_flex.mxml
 
 (See http://github.com/dbrock/fcshd for more information.)
 
