@@ -6,41 +6,46 @@ function test_local(swf) {
   var stdin_line = "hello"
   var exit_code = 123
 
-  var timeout = setTimeout(function () {
-    test(swf, function () {
-      assert.fail("timeout")
-    })
-  }, 5000)
-
-  require("child_process").exec([
-    "echo", stdin_line, "|",
-    "bin/flashplayer-stdio", swf, exit_code
-  ].join(" "), function (error, stdout, stderr) {
-    clearTimeout(timeout)
-    test(swf, function () {
-      assert.equal(stdout, stdin_line + "\n")
-      assert.equal(stderr, stdin_line.toUpperCase() + "\n")
-      assert.equal(error.code, exit_code)
-    })
-  })
-}
-
-function test_web(swf, port) {
-  var flashplayer, timeout
-
-  require("http").createServer(function () {
-    test_passed(swf)
-    flashplayer.kill()
-    clearTimeout(timeout)
-    this.close()
-  }).listen(port, function () {
-    flashplayer = start_flashplayer(swf, { port: port })    
-    timeout = setTimeout(function () {
+  with_timeout(
+    function (callback) {
+      require("child_process").exec([
+        "echo", stdin_line, "|",
+        "bin/flashplayer-stdio", swf, exit_code
+      ].join(" "), callback)
+    }, function (error, stdout, stderr) {
+      test(swf, function () {
+        assert.equal(stdout, stdin_line + "\n")
+        assert.equal(stderr, stdin_line.toUpperCase() + "\n")
+        assert.equal(error.code, exit_code)
+      })
+    }, function () {
       test(swf, function () {
         assert.fail("timeout")
       })
-    }, 5000)
-  })
+    }
+  )
+}
+
+function test_web(swf, port) {
+  var flashplayer
+
+  with_timeout(
+    function (callback) {
+      require("http").createServer(function () {
+        flashplayer.kill()
+        this.close()
+        callback()
+      }).listen(port, function () {
+        flashplayer = start_flashplayer(swf, { port: port })    
+      })
+    }, function () {
+      test_passed(swf)
+    }, function () {
+      test(swf, function () {
+        assert.fail("timeout")
+      })
+    }
+  )
 }
 
 function start_flashplayer(swf, parameters) {
@@ -56,6 +61,21 @@ function stringify_query_parameters(parameters) {
   return Object.keys(parameters || {}).map(function (name) {
     return name + "=" + parameters[name]
   }).join("&")
+}
+
+function with_timeout(body, callback, errback) {
+  var timeout = setTimeout(function () {
+    errback()
+    callback = null
+  }, 5000)
+
+  body(function () {
+    clearTimeout(timeout)
+
+    if (callback) {
+      callback.apply(null, arguments)
+    }
+  })
 }
 
 //----------------------------------------------------------
