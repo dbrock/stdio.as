@@ -1,5 +1,7 @@
 var assert = require("assert")
 
+console.log("1..4")
+
 function test_local(swf) {
   var stdin_line = "hello"
   var exit_code = 123
@@ -62,11 +64,11 @@ function test(name, callback) {
 }
 
 function test_passed(name) {
-  console.log("OK " + name)
+  console.log("ok - " + name)
 }
 
 function test_failed(name) {
-  console.log("FAIL " + name)
+  console.log("not ok - " + name)
 }
 
 //----------------------------------------------------------
