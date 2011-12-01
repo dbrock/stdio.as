@@ -49,7 +49,7 @@ Here is the equivalent as a Spark application:
       </fx:Script>
     </stdio:ProcessSparkApplication>
 
-Remembering to include `stdio.swc', you can simply compile these
+Remembering to include `stdio.swc`, you can simply compile these
 applications as usual:
 
     $ fcshc stdio.swc hello_process.as
