@@ -92,8 +92,7 @@ The global variable `stdio.process` contains an object implementing
 the following interface:
 
     public interface IProcess {
-      // Whether or not we are running as a Unix process.
-      // If not, most other methods will throw exeptions.
+      // Whether or not stdio facilities are available.
       function get stdio(): Boolean
   
       // The command-line arguments to the process (not
