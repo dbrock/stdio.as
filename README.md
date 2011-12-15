@@ -1,5 +1,5 @@
-flashplayer-stdio
-=================
+run-swf
+=======
 
 This package lets you run an ActionScript 3 program as if it were a
 normal Unix process.  Specifically, it provides the ability to
@@ -58,11 +58,11 @@ applications as usual:
 
 (See http://github.com/dbrock/fcshd for more information.)
 
-To run an stdio-enabled SWF, use the `flashplayer-stdio` wrapper:
+To run an stdio-enabled SWF, use the `run-swf` wrapper:
 
-    $ flashplayer-stdio hello_process.swf
+    $ run-swf hello_process.swf
     Hello, World!
-    $ flashplayer-stdio hello_process_flex.swf Galaxy
+    $ run-swf hello_process_flex.swf Galaxy
     Hello, Galaxy!
 
 Unfortunately, I know of no way to suppress the Flash Player window,
@@ -157,8 +157,8 @@ regular line-based API, you can access the stream objects directly:
 How It Works
 ------------
 
-The `flashplayer-stdio` wrapper works by first setting up some servers
-listening to random available TCP ports on localhost:
+The `run-swf` wrapper works by first setting up some servers listening
+to random available TCP ports on localhost:
 
 * one web server, for serving the SWF and accepting commands;
 * three raw TCP servers, for piping stdin, stdout and stderr.

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// -*- mode: javascript -*-
 
 var ChildProcess = require("child_process")
 var FS = require("fs")
@@ -28,7 +29,7 @@ process.on("exit", function () {
 
 process.on("uncaughtException", function (error) {
   kill_flashplayer()
-  process.stderr.puts("flashplayer-stdio: internal error: " + error.stack)
+  console.error("run-swf: internal error: " + error.stack)
   process.exit(-1)
 })
 
@@ -41,7 +42,8 @@ function kill_flashplayer() {
 if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
 } else {
-  console.error("Usage: flashplayer-stdio FILENAME.swf")
+  console.error("\
+Usage: [NAME=VALUE...] run-swf PROGRAM.swf [ARGS...] <STDIN >STDOUT 2>STDERR")
   process.exit(1)
 }
 
@@ -308,12 +310,12 @@ function get_program(filename, callback) {
 function fatal_error(error) {
   var message = error instanceof Error ? error.message : error
 
-  console.error("flashplayer-stdio: " + message)
+  console.error("run-swf: " + message)
   process.exit(1)
 }
 
 function debug(message) {
   if (process.env.DEBUG) {
-    console.warn("flashplayer-stdio: " + message)
+    console.warn("run-swf: " + message)
   }
 }
