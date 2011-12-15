@@ -4,7 +4,8 @@ flashplayer-stdio
 This package lets you run an ActionScript 3 program as if it were a
 normal Unix process.  Specifically, it provides the ability to
 
-* access command-line arguments,
+* access environment variables,
+* accept command-line arguments,
 * read from standard input,
 * write to standard output,
 * write to standard error,
@@ -94,7 +95,11 @@ the following interface:
     public interface IProcess {
       // Whether or not stdio facilities are available.
       function get stdio(): Boolean
-  
+
+      // The environment of the process. This is passed
+      // as the query string parameters of the SWF.
+      function get env(): Object
+
       // The command-line arguments to the process (not
       // including the name of the SWF).
       function get argv(): Array
@@ -123,7 +128,6 @@ the following interface:
       function get immortal(): Boolean
       function set immortal(value: Boolean): void
     }
-
 
 
 Low-level Stream API
@@ -159,8 +163,12 @@ listening to random available TCP ports on localhost:
 * one web server, for serving the SWF and accepting commands;
 * three raw TCP servers, for piping stdin, stdout and stderr.
 
-It then starts Flash Player, passing the URL and port numbers as query
-parameters to the SWF.  At initialization time, the runtime library
-parses the parameters and connects to the sockets, and finally either
+Then the wrapper starts Flash Player, passing (as special SWF
+parameters) the URL of the web server, the port numbers of the TCP
+servers, and the command-line arguments.  Environment variables are
+passed along verbatim as normal SWF parameters.
+
+At initialization time, the runtime library parses the special SWF
+parameters and connects to the stdio sockets, and finally either
 invokes your `main()` method (for Flash applications) or dispatches a
 `processReady` event (for Flex applications).

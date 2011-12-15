@@ -53,6 +53,10 @@ package stdio {
 
     // -----------------------------------------------------
 
+    public function get env(): Object {
+      return parameters
+    }
+
     public function get argv(): Array {
       return parameters["stdio.argv"].split(" ").map(
         function (argument: String, ...rest: Array): String {

@@ -28,7 +28,7 @@ process.on("exit", function () {
 
 process.on("uncaughtException", function (error) {
   kill_flashplayer()
-  console.log("flashplayer-stdio: internal error: " + error.stack)
+  process.stderr.puts("flashplayer-stdio: internal error: " + error.stack)
   process.exit(-1)
 })
 
@@ -87,13 +87,13 @@ function run_swf(filename, argv) {
     open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
       var url = "http://localhost:" + http_port
 
-      run_flashplayer(url, {
-        "stdio.service": url,
-        "stdio.in": stdin_port,
-        "stdio.out": stdout_port,
-        "stdio.err": stderr_port,
-        "stdio.argv": argv.map(encodeURIComponent).join(" ")
-      })
+      process.env["stdio.service"] = url
+      process.env["stdio.in"] = stdin_port
+      process.env["stdio.out"] = stdout_port
+      process.env["stdio.err"] = stderr_port
+      process.env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
+
+      run_flashplayer(url, process.env)
     })
   })
 }

@@ -4,6 +4,10 @@ package stdio {
     // If not, most other methods will throw exeptions.
     function get stdio(): Boolean
 
+    // The environment of the process. This is passed
+    // as the query string parameters of the SWF.
+    function get env(): Object
+
     // The command-line arguments to the process (not
     // including the name of the SWF).
     function get argv(): Array

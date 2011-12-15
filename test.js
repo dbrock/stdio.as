@@ -3,20 +3,23 @@ var assert = require("assert")
 console.log("1..4")
 
 function test_local(swf) {
-  var stdin_line = "hello"
-  var exit_code = 123
+  var stdin_word = "hello"
+  var env_foo = "bar"
+  var argv_1 = "123"
 
   with_timeout(
     function (callback) {
       require("child_process").exec([
-        "echo", stdin_line, "|",
-        "bin/flashplayer-stdio", swf, exit_code
+        "echo", stdin_word, "|",
+        "foo=" + env_foo,
+        "bin/flashplayer-stdio", swf,
+        argv_1
       ].join(" "), callback)
     }, function (error, stdout, stderr) {
       test(swf, function () {
-        assert.equal(stdout, stdin_line + "\n")
-        assert.equal(stderr, stdin_line.toUpperCase() + "\n")
-        assert.equal(error.code, exit_code)
+        assert.equal(stdout, stdin_word + "\n")
+        assert.equal(stderr, env_foo + "\n")
+        assert.equal(error.code, parseInt(argv_1))
       })
     }, function () {
       test(swf, function () {
