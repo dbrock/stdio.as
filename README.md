@@ -13,10 +13,11 @@ normal Unix process.  Specifically, it provides the ability to
 
 It also by default mutes the standard runtime error dialogs, instead
 reformatting stack traces of uncaught errors to GCC-like error message
-syntax and sending them to stderr.  By flipping a switch, you can make
-your process kill itself when an uncaught error occurs.
+syntax and sending them to stderr.
 
 Implementations are available for Flex 4 apps and pure Flash apps.
+The main entry points from ActionScript are `stdio.process`,
+`stdio.ProcessSprite` and `stdio.ProcessSparkApplication`.
 
 
 Example
@@ -39,15 +40,12 @@ Here is the equivalent as a Spark application:
 
     <stdio:ProcessSparkApplication
         xmlns:fx="http://ns.adobe.com/mxml/2009"
-        xmlns:stdio="stdio.*"
-        processReady="main()">
-      <fx:Script>
+        xmlns:stdio="stdio.*">
+      <stdio:processReady>
         import stdio.process
     
-        private function main(): void {
-          process.puts("Hello, " + (process.argv[0] || "World") + "!")
-        }
-      </fx:Script>
+        process.puts("Hello, " + (process.argv[0] || "World") + "!")
+      </stdio:processReady>
     </stdio:ProcessSparkApplication>
 
 Remembering to include `stdio.swc`, you can simply compile these
@@ -56,7 +54,7 @@ applications as usual:
     $ fcshc stdio.swc hello_process.as
     $ fcshc stdio.swc hello_process_flex.mxml
 
-(See http://github.com/dbrock/fcshd for more information.)
+(See http://github.com/dbrock/fcshd for information about `fcshc`.)
 
 To run an stdio-enabled SWF, use the `run-swf` wrapper:
 
@@ -65,8 +63,8 @@ To run an stdio-enabled SWF, use the `run-swf` wrapper:
     $ run-swf hello_process_flex.swf Galaxy
     Hello, Galaxy!
 
-Unfortunately, I know of no way to suppress the Flash Player window,
-regardless of whether your program actually displays any graphics.
+(Unfortunately, I know of no way to suppress the Flash Player window,
+regardless of whether your program actually displays any graphics.)
 
 
 Installation
