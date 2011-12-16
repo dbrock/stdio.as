@@ -11,5 +11,13 @@ manual:
 	ronn man/run-swf.1.ronn \
 	  --html --style=man,toc \
 	  --manual="FLASHPLAYER-STDIO"
+pages: manual
+	git checkout gh-pages
+	cp man/*.html .
+	git add *.html
+	git commit -m "Regenerate man file."
+	git push origin gh-pages
+	git checkout master
+	rm *.html
 clean:
 	rm -f *.swc *.swf man/*.html
