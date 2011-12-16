@@ -62,7 +62,8 @@ function start_flashplayer(swf, parameters) {
 
 function stringify_query_parameters(parameters) {
   return Object.keys(parameters || {}).map(function (name) {
-    return name + "=" + parameters[name]
+    return encodeURIComponent(name) + "=" +
+      encodeURIComponent(parameters[name])
   }).join("&")
 }
 
