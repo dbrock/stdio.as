@@ -10,8 +10,12 @@ package stdio {
       this.parameters = parameters
     }
 
-    public function get stdio(): Boolean {
+    internal function get available(): Boolean {
       return !!service_url
+    }
+
+    public function get local(): Boolean {
+      return true
     }
 
     private function get service_url(): String {

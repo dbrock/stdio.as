@@ -95,11 +95,13 @@ The global variable `stdio.process` contains an object implementing
 the following interface:
 
     public interface IProcess {
-      // Whether or not stdio facilities are available.
-      function get stdio(): Boolean
-
-      // The environment of the process. This is passed
-      // as the query string parameters of the SWF.
+      // Whether or not this is actually a local process.
+      // Most stdio facilities are only available for local
+      // processes, but the environment is always available.
+      function get local(): Boolean
+  
+      // The environment of the process. This is equivalent
+      // to the query string parameters of the SWF.
       function get env(): Object
 
       // The command-line arguments to the process (not

@@ -1,6 +1,6 @@
 package stdio {
   internal class WebProcess implements IProcess {
-    public function get stdio(): Boolean {return false}
+    public function get local(): Boolean {return false}
     public function get env(): Object {return {}}
     public function get argv(): Array {return []}
     public function gets(callback: Function): void {throw new Error}

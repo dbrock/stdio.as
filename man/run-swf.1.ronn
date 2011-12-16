@@ -26,31 +26,31 @@ from stdin + write to stdout/stderr, and access enviroment variables.
 
 The global `stdio.process` object provides the following operations:
 
-  * `process.stdio`:
-    Whether or not stdio facilities are available.
+  * `process.local`:
+    Is this actually a local process?
 
   * `process.env`:
-    The environment of the process (equivalent to the query string
-    parameters of the SWF).
+    The environment of the process.  Equivalent to the SWF query
+    string parameters.  Available for both local and web processes.
 
   * `process.argv`:
     The command-line arguments, not including the name of the SWF.
 
   * `process.gets`(<callback>):
-    Read one line from stdin and pass it to <callback>.
+    Read one line from standard input and pass it to <callback>.
     The newline is chopped off first.
 
   * `process.puts`(<text>):
-     Write <text> followed by a newline to stdout.
+    Write <text> followed by a newline to standard output.
 
   * `process.warn`(<text>):
-     Write <text> followed by a newline to stderr.
+    Write <text> followed by a newline to standard error.
 
   * `process.exit`([<status>]):
     Exit the process, returning <status> (default: `0`).
 
   * `process.whiny`[=<value>]:
-    Dump uncaught errors to stderr? (default: `true`).
+    Dump uncaught errors to standard error? (default: `true`).
 
   * `process.immortal`[=<value>]:
     Keep running after uncaught error? (default: `true`).
