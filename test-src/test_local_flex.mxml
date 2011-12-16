@@ -1,4 +1,7 @@
-<Application
+<stdio:Application
     xmlns:fx="http://ns.adobe.com/mxml/2009"
-    xmlns="stdio.spark.*"
-    processReady="test_local()"/>
+    xmlns:stdio="stdio.spark.*">
+  <stdio:main>
+    test_local()
+  </stdio:main>
+</stdio:Application>

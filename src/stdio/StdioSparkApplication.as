@@ -3,13 +3,13 @@ package stdio {
 
   import spark.components.Application
 
-  [Event(name="processReady")]
+  [Event(name="main")]
   public class StdioSparkApplication extends Application {
     override public function initialize(): void {
       super.initialize()
 
       setup(parameters, function (): void {
-        dispatchEvent(new Event("processReady"))
+        dispatchEvent(new Event("main"))
       })
 
       if (process is LocalProcess) {

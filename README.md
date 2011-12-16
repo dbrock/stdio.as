@@ -45,11 +45,11 @@ Here is the equivalent as a Spark application:
     <stdio:Application
         xmlns:fx="http://ns.adobe.com/mxml/2009"
         xmlns:stdio="stdio.spark.*">
-      <stdio:processReady>
+      <stdio:main>
         import stdio.process
     
         process.puts("Hello, " + (process.argv[0] || "World") + "!")
-      </stdio:processReady>
+      </stdio:main>
     </stdio:Application>
 
 Remembering to include `stdio.swc`, you can simply compile these
@@ -173,6 +173,6 @@ servers, and the command-line arguments.  Environment variables are
 passed along verbatim as normal SWF parameters.
 
 At initialization time, the runtime library parses the special SWF
-parameters and connects to the stdio sockets, and finally either
-invokes your `main()` method (for Flash applications) or dispatches a
-`processReady` event (for Flex applications).
+parameters and connects to the stdio sockets, and finally either (for
+Flash applications) invokes your `main()` method or (for Flex
+applications) dispatches a `main` event.

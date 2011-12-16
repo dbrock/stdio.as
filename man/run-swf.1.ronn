@@ -67,11 +67,11 @@ The global `stdio.process` object provides the following operations:
     <stdio:Application
         xmlns:fx="http://ns.adobe.com/mxml/2009"
         xmlns:stdio="stdio.spark.*">
-      <stdio:processReady>
+      <stdio:main>
         import stdio.process
 
         process.puts("Hello, World!")
-      </stdio:processReady>
+      </stdio:main>
     </stdio:Application>
 
 ## EXAMPLES
