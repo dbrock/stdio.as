@@ -1,5 +1,5 @@
-run-swf(1) -- run Flash applications like normal Unix programs
-==============================================================
+run-swf(1) -- run Flash applications like normal Unix processes
+===============================================================
 
 ## SYNOPSIS
 
@@ -11,7 +11,10 @@ run-swf(1) -- run Flash applications like normal Unix programs
 ## DESCRIPTION
 
 Enable your Flash applications to process command-line arguments, read
-from stdin + write to stdout/stderr, and access enviroment variables.
+from stdin and write to stdout/stderr, access enviroment variables,
+and exit with arbitrary status codes.
+
+Yes, your Flash code just became scriptable.
 
 ## ACTIONSCRIPT API
 
@@ -25,11 +28,11 @@ The global `stdio.process` object provides the following operations:
     string parameters.  Available for both local and web processes.
 
   * `process.argv`:
-    The command-line arguments, not including the name of the SWF.
+    The command-line arguments (not including the name of the SWF).
 
   * `process.gets`(<callback>):
-    Read one line from standard input and pass it to <callback>.
-    The newline is chopped off first.
+    Read one line from standard input, chop off the newline and
+    pass it to <callback>.
 
   * `process.puts`(<text>):
     Write <text> followed by a newline to standard output.
@@ -38,13 +41,13 @@ The global `stdio.process` object provides the following operations:
     Write <text> followed by a newline to standard error.
 
   * `process.exit`([<status>]):
-    Exit the process, returning <status> (default: `0`).
+    Exit the process, returning <status> (default: 0).
 
   * `process.whiny`[=<value>]:
-    Dump uncaught errors to standard error? (default: `true`).
+    Dump uncaught errors to standard error? (default: true).
 
   * `process.immortal`[=<value>]:
-    Keep running after uncaught error? (default: `true`).
+    Keep running after uncaught error? (default: true).
 
   * `process.stdin`, `process.stdout`, `process.stderr`:
     Low-level access to the IO streams.
