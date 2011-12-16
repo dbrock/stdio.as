@@ -1,25 +1,28 @@
 flashplayer-stdio
 =================
 
-See the [run-swf(1)][] man page for a quick overview.
+The moving parts you have to keep track of:
 
-This package lets you run an ActionScript 3 program as if it were a
-normal Unix process.  Specifically, it provides the ability to
+* `stdio.swc`: the tiny little library used by your ActionScript code.
+* [run-swf(1)][]: the nitfy little executable used to run your SWFs.
 
-* access environment variables,
-* accept command-line arguments,
-* read from standard input,
-* write to standard output,
-* write to standard error,
-* exit with an arbitrary status code.
+The wondrous capabilities of a good old Unix process which are
+henceforth available to your locally-running Flash applications:
 
-It also by default mutes the standard runtime error dialogs, instead
-reformatting stack traces of uncaught errors to GCC-like error message
-syntax and sending them to stderr.
+* Access environment variables.
+* Accept command-line arguments.
+* Read from standard input.
+* Write to standard output.
+* Write to standard error.
+* Exit with an arbitrary status code.
 
-Implementations are available for Flex 4 apps and pure Flash apps.
-The main entry points from ActionScript are `stdio.process`,
-`stdio.ProcessSprite` and `stdio.ProcessSparkApplication`.
+We also kill those annoying runtime error dialogs; instead, uncaught
+errors are printed to stderr in a GCC-like syntax.  This makes them
+easy to read, both for programmers, and for our tools (e.g., Emacs).
+
+**Please see the [run-swf(1)][] man page for more information.**
+
+Implementations are available for both Flex 4 and pure Flash.
 
 [run-swf(1)]: http://dbrock.github.com/flashplayer-stdio/run-swf.1
 
@@ -86,93 +89,3 @@ If you are on OS X, you can install Node.js using Homebrew:
 The Flex SDK comes equipped with a standalone Flash Player, located in
 the `runtimes/player` directory.  If you are on OS X, simply unzip the
 application and move it to `/Applications`.
-
-
-Process API
------------
-
-The global variable `stdio.process` contains an object implementing
-the following interface:
-
-    public interface IProcess {
-      // Whether or not this is actually a local process.
-      // Most stdio facilities are only available for local
-      // processes, but the environment is always available.
-      function get local(): Boolean
-  
-      // The environment of the process. This is equivalent
-      // to the query string parameters of the SWF.
-      function get env(): Object
-
-      // The command-line arguments to the process (not
-      // including the name of the SWF).
-      function get argv(): Array
-  
-      // Read one line from standard input and pass it to
-      // the callback (after chopping off the newline).
-      function gets(callback: Function): void
-      function get stdin(): InputStream
-  
-      // Write something + newline to standard output.
-      function puts(value: Object): void
-      function get stdout(): OutputStream
-  
-      // Like puts, but for standard error.
-      function warn(value: Object): void
-      function get stderr(): OutputStream
-  
-      // Exit the process with the given status code.
-      function exit(status: int = 0): void
-  
-      // Whether uncaught errors are dumped to stderr.
-      function get whiny(): Boolean
-      function set whiny(value: Boolean): void
-  
-      // Whether an uncaught error kills the process.
-      function get immortal(): Boolean
-      function set immortal(value: Boolean): void
-    }
-
-
-Low-level Stream API
---------------------
-
-If you need more fine-grained control than what is provided by the
-regular line-based API, you can access the stream objects directly:
-
-    public interface InputStream {
-      // Whether any data is available.
-      function get ready(): Boolean
-  
-      // Wait for data to become available.
-      function read(callback: Function): void
-  
-      // Wait for one line of data to become available.
-      function gets(callback: Function): void
-    }
-
-    public interface OutputStream {
-      function puts(value: Object): void
-      function write(value: Object): void
-      function close(): void
-    }
-
-
-How It Works
-------------
-
-The `run-swf` wrapper works by first setting up some servers listening
-to random available TCP ports on localhost:
-
-* one web server, for serving the SWF and accepting commands;
-* three raw TCP servers, for piping stdin, stdout and stderr.
-
-Then the wrapper starts Flash Player, passing (as special SWF
-parameters) the URL of the web server, the port numbers of the TCP
-servers, and the command-line arguments.  Environment variables are
-passed along verbatim as normal SWF parameters.
-
-At initialization time, the runtime library parses the special SWF
-parameters and connects to the stdio sockets, and finally either (for
-Flash applications) invokes your `main()` method or (for Flex
-applications) dispatches a `main` event.
