@@ -1,13 +1,13 @@
-flashplayer-stdio
-=================
+flash-stdio
+===========
 
-The moving parts you have to keep track of:
+**The moving parts you have to keep track of:**
 
 * `stdio.swc`: the tiny little library used by your ActionScript code.
-* [run-swf(1)][]: the nitfy little executable used to run your SWFs.
+* **[run-swf(1)][]**: the nitfy little executable used to run your SWFs.
 
-The wondrous capabilities of a good old Unix process which are
-henceforth available to your locally-running Flash applications:
+**The wondrous capabilities of a good old Unix process which are
+henceforth available to your locally-running Flash applications:**
 
 * Access environment variables.
 * Accept command-line arguments.
@@ -20,11 +20,11 @@ We also kill those annoying runtime error dialogs; instead, uncaught
 errors are printed to stderr in a GCC-like syntax.  This makes them
 easy to read, both for programmers, and for our tools (e.g., Emacs).
 
-**Please see the [run-swf(1)][] man page for more information.**
-
 Implementations are available for both Flex 4 and pure Flash.
 
-[run-swf(1)]: http://dbrock.github.com/flashplayer-stdio/run-swf.1
+**Please see the [run-swf(1)][] man page for more information.**
+
+[run-swf(1)]: http://dbrock.github.com/flash-stdio/run-swf.1
 
 
 Example
