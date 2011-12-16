@@ -62,10 +62,10 @@
     <a href="#NAME">NAME</a>
     <a href="#SYNOPSIS">SYNOPSIS</a>
     <a href="#DESCRIPTION">DESCRIPTION</a>
-    <a href="#EXAMPLES">EXAMPLES</a>
     <a href="#ACTIONSCRIPT-API">ACTIONSCRIPT API</a>
     <a href="#FLASH-BOILERPLATE">FLASH BOILERPLATE</a>
     <a href="#FLEX-4-BOILERPLATE">FLEX 4 BOILERPLATE</a>
+    <a href="#EXAMPLES">EXAMPLES</a>
     <a href="#HOW-IT-WORKS">HOW IT WORKS</a>
     <a href="#LIMITATIONS">LIMITATIONS</a>
     <a href="#AUTHOR">AUTHOR</a>
@@ -94,31 +94,21 @@
 <p>Enable your Flash applications to process command-line arguments, read
 from stdin + write to stdout/stderr, and access enviroment variables.</p>
 
-<h2 id="EXAMPLES">EXAMPLES</h2>
-
-<pre><code>$ run-swf echo.swf 1 2 3
-1 2 3
-
-$ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2&gt;error.log
-foo: started
-foo: connecting to database: http://localhost:5984/foo
-</code></pre>
-
 <h2 id="ACTIONSCRIPT-API">ACTIONSCRIPT API</h2>
 
 <p>The global <code>stdio.process</code> object provides the following operations:</p>
 
 <dl>
-<dt><code>process.stdio</code></dt><dd><p>Whether or not stdio facilities are available.</p></dd>
-<dt><code>process.env</code></dt><dd><p>The environment of the process (equivalent to the query string
-parameters of the SWF).</p></dd>
+<dt><code>process.local</code></dt><dd><p>Is this actually a local process?</p></dd>
+<dt><code>process.env</code></dt><dd><p>The environment of the process.  Equivalent to the SWF query
+string parameters.  Available for both local and web processes.</p></dd>
 <dt><code>process.argv</code></dt><dd><p>The command-line arguments, not including the name of the SWF.</p></dd>
-<dt><code>process.gets</code>(<var>callback</var>)</dt><dd><p>Read one line from stdin and pass it to <var>callback</var>.
+<dt><code>process.gets</code>(<var>callback</var>)</dt><dd><p>Read one line from standard input and pass it to <var>callback</var>.
 The newline is chopped off first.</p></dd>
-<dt><code>process.puts</code>(<var>text</var>)</dt><dd><p> Write <var>text</var> followed by a newline to stdout.</p></dd>
-<dt><code>process.warn</code>(<var>text</var>)</dt><dd><p> Write <var>text</var> followed by a newline to stderr.</p></dd>
+<dt><code>process.puts</code>(<var>text</var>)</dt><dd><p>Write <var>text</var> followed by a newline to standard output.</p></dd>
+<dt><code>process.warn</code>(<var>text</var>)</dt><dd><p>Write <var>text</var> followed by a newline to standard error.</p></dd>
 <dt><code>process.exit</code>([<var>status</var>])</dt><dd><p>Exit the process, returning <var>status</var> (default: <code>0</code>).</p></dd>
-<dt><code>process.whiny</code>[=<var>value</var>]</dt><dd><p>Dump uncaught errors to stderr? (default: <code>true</code>).</p></dd>
+<dt><code>process.whiny</code>[=<var>value</var>]</dt><dd><p>Dump uncaught errors to standard error? (default: <code>true</code>).</p></dd>
 <dt><code>process.immortal</code>[=<var>value</var>]</dt><dd><p>Keep running after uncaught error? (default: <code>true</code>).</p></dd>
 <dt><code>process.stdin</code>, <code>process.stdout</code>, <code>process.stderr</code></dt><dd><p>Low-level access to the IO streams.</p></dd>
 </dl>
@@ -127,10 +117,10 @@ The newline is chopped off first.</p></dd>
 <h2 id="FLASH-BOILERPLATE">FLASH BOILERPLATE</h2>
 
 <pre><code>package {
-  import stdio.ProcessSprite
+  import stdio.flash.Sprite
   import stdio.process
 
-  public class hello_world extends ProcessSprite {
+  public class hello_world extends Sprite {
     override public function main(): void {
       process.puts("Hello, World!")
     }
@@ -140,15 +130,25 @@ The newline is chopped off first.</p></dd>
 
 <h2 id="FLEX-4-BOILERPLATE">FLEX 4 BOILERPLATE</h2>
 
-<pre><code>&lt;stdio:ProcessSparkApplication
+<pre><code>&lt;stdio:Application
     xmlns:fx="http://ns.adobe.com/mxml/2009"
-    xmlns:stdio="stdio.*"&gt;
-  &lt;stdio:processReady&gt;
+    xmlns:stdio="stdio.spark.*"&gt;
+  &lt;stdio:main&gt;
     import stdio.process
 
     process.puts("Hello, World!")
-  &lt;/stdio:processReady&gt;
-&lt;/stdio:ProcessSparkApplication&gt;
+  &lt;/stdio:main&gt;
+&lt;/stdio:Application&gt;
+</code></pre>
+
+<h2 id="EXAMPLES">EXAMPLES</h2>
+
+<pre><code>$ run-swf echo.swf 1 2 3
+1 2 3
+
+$ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2&gt;error.log
+foo: started
+foo: connecting to database: http://localhost:5984/foo
 </code></pre>
 
 <h2 id="HOW-IT-WORKS">HOW IT WORKS</h2>
@@ -163,7 +163,9 @@ Environment variables are passed through the same way, verbatim.</p>
 <h2 id="LIMITATIONS">LIMITATIONS</h2>
 
 <p>Currently, <code>run-swf</code> cannot answer <code>&lt;policy-file-request/&gt;</code> queries.
-You must run a global policy file server on port <em>843</em>.</p>
+Therefore, you must run a global policy file server on port <em>843</em>.</p>
+
+<p>Applications cannot yet install signal handlers.</p>
 
 <h2 id="AUTHOR">AUTHOR</h2>
 
