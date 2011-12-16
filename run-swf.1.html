@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' value='text/html;charset=utf8'>
+  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
+  <title>run-swf(1) - run Flash applications like normal Unix programs</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
+  </style>
+  <style type='text/css' media='all'>
+  /* style: toc */
+  .man-navigation {display:block !important;position:fixed;top:0;left:113ex;height:100%;width:100%;padding:48px 0 0 0;border-left:1px solid #dbdbdb;background:#eee}
+  .man-navigation a,.man-navigation a:hover,.man-navigation a:link,.man-navigation a:visited {display:block;margin:0;padding:5px 2px 5px 30px;color:#999;text-decoration:none}
+  .man-navigation a:hover {color:#111;text-decoration:underline}
+  </style>
+</head>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#EXAMPLES">EXAMPLES</a>
+    <a href="#ACTIONSCRIPT-API">ACTIONSCRIPT API</a>
+    <a href="#FLASH-BOILERPLATE">FLASH BOILERPLATE</a>
+    <a href="#FLEX-4-BOILERPLATE">FLEX 4 BOILERPLATE</a>
+    <a href="#HOW-IT-WORKS">HOW IT WORKS</a>
+    <a href="#LIMITATIONS">LIMITATIONS</a>
+    <a href="#AUTHOR">AUTHOR</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>run-swf(1)</li>
+    <li class='tc'>FLASHPLAYER-STDIO</li>
+    <li class='tr'>run-swf(1)</li>
+  </ol>
+
+  <h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>run-swf</code> - <span class="man-whatis">run Flash applications like normal Unix programs</span>
+</p>
+
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p><code>run-swf</code> <var>app</var>.swf <var>arguments</var>...<br />
+<code>run-swf</code> <var>app</var>.swf &lt; <var>data</var> &gt; <var>result</var> 2&gt; <var>log</var><br />
+<var>name</var>=<var>value</var> <code>run-swf</code> <var>app</var>.swf<br />
+<code>run-swf</code> <var>app</var>.swf ; <code>echo</code> $?</p>
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<p>Enable your Flash applications to process command-line arguments, read
+from stdin + write to stdout/stderr, and access enviroment variables.</p>
+
+<h2 id="EXAMPLES">EXAMPLES</h2>
+
+<pre><code>$ run-swf echo.swf 1 2 3
+1 2 3
+
+$ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2&gt;error.log
+foo: started
+foo: connecting to database: http://localhost:5984/foo
+</code></pre>
+
+<h2 id="ACTIONSCRIPT-API">ACTIONSCRIPT API</h2>
+
+<p>The global <code>stdio.process</code> object provides the following operations:</p>
+
+<dl>
+<dt><code>process.stdio</code></dt><dd><p>Whether or not stdio facilities are available.</p></dd>
+<dt><code>process.env</code></dt><dd><p>The environment of the process (equivalent to the query string
+parameters of the SWF).</p></dd>
+<dt><code>process.argv</code></dt><dd><p>The command-line arguments, not including the name of the SWF.</p></dd>
+<dt><code>process.gets</code>(<var>callback</var>)</dt><dd><p>Read one line from stdin and pass it to <var>callback</var>.
+The newline is chopped off first.</p></dd>
+<dt><code>process.puts</code>(<var>text</var>)</dt><dd><p> Write <var>text</var> followed by a newline to stdout.</p></dd>
+<dt><code>process.warn</code>(<var>text</var>)</dt><dd><p> Write <var>text</var> followed by a newline to stderr.</p></dd>
+<dt><code>process.exit</code>([<var>status</var>])</dt><dd><p>Exit the process, returning <var>status</var> (default: <code>0</code>).</p></dd>
+<dt><code>process.whiny</code>[=<var>value</var>]</dt><dd><p>Dump uncaught errors to stderr? (default: <code>true</code>).</p></dd>
+<dt><code>process.immortal</code>[=<var>value</var>]</dt><dd><p>Keep running after uncaught error? (default: <code>true</code>).</p></dd>
+<dt><code>process.stdin</code>, <code>process.stdout</code>, <code>process.stderr</code></dt><dd><p>Low-level access to the IO streams.</p></dd>
+</dl>
+
+
+<h2 id="FLASH-BOILERPLATE">FLASH BOILERPLATE</h2>
+
+<pre><code>package {
+  import stdio.ProcessSprite
+  import stdio.process
+
+  public class hello_world extends ProcessSprite {
+    override public function main(): void {
+      process.puts("Hello, World!")
+    }
+  }
+}
+</code></pre>
+
+<h2 id="FLEX-4-BOILERPLATE">FLEX 4 BOILERPLATE</h2>
+
+<pre><code>&lt;stdio:ProcessSparkApplication
+    xmlns:fx="http://ns.adobe.com/mxml/2009"
+    xmlns:stdio="stdio.*"&gt;
+  &lt;stdio:processReady&gt;
+    import stdio.process
+
+    process.puts("Hello, World!")
+  &lt;/stdio:processReady&gt;
+&lt;/stdio:ProcessSparkApplication&gt;
+</code></pre>
+
+<h2 id="HOW-IT-WORKS">HOW IT WORKS</h2>
+
+<p>The <code>run-swf</code> wrapper sets up one web server (for serving the SWF and
+accepting commands, like <code>exit</code>) and three raw TCP servers (for piping
+<em>stdin</em>, <em>stdout</em> and <em>stderr</em>).  It then starts Flash Player, passing
+the URL of the web server, the port numbers of the IO servers, and the
+command-line arguments, as special query string parameters to the SWF.
+Environment variables are passed through the same way, verbatim.</p>
+
+<h2 id="LIMITATIONS">LIMITATIONS</h2>
+
+<p>Currently, <code>run-swf</code> cannot answer <code>&lt;policy-file-request/&gt;</code> queries.
+You must run a global policy file server on port <em>843</em>.</p>
+
+<h2 id="AUTHOR">AUTHOR</h2>
+
+<p>Daniel Brockman, <a href="http://twitter.com/dbrock" data-bare-link="true">http://twitter.com/dbrock</a></p>
+
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'></li>
+    <li class='tc'>December 2011</li>
+    <li class='tr'>run-swf(1)</li>
+  </ol>
+
+  </div>
+</body>
+</html>
