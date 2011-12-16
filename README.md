@@ -1,5 +1,5 @@
-run-swf
-=======
+flashplayer-stdio
+=================
 
 This package lets you run an ActionScript 3 program as if it were a
 normal Unix process.  Specifically, it provides the ability to
