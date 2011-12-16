@@ -21,17 +21,18 @@ Yes, your Flash code just became scriptable.
 The global `stdio.process` object provides the following operations:
 
   * `process.local`:
-    Is this actually a local process?
+    Is this actually a local process?  (If not, most other operations
+    will either do nothing, return nothing, or throw an error.)
 
   * `process.env`:
-    The environment of the process.  Equivalent to the SWF query
-    string parameters.  Available for both local and web processes.
+    The process environment.  Available both locally and on the web.
+    Equivalent to the SWF query string parameters.
 
   * `process.argv`:
     The command-line arguments (not including the name of the SWF).
 
   * `process.gets`(<callback>):
-    Read one line from standard input, chop off the newline and
+    Read one line from standard input, chop off the newline, and
     pass it to <callback>.
 
   * `process.puts`(<text>):
@@ -41,16 +42,13 @@ The global `stdio.process` object provides the following operations:
     Write <text> followed by a newline to standard error.
 
   * `process.exit`([<status>]):
-    Exit the process, returning <status> (default: 0).
+    Exit the process with code <status>. (default: 0)
 
   * `process.whiny`[=<value>]:
-    Dump uncaught errors to standard error? (default: true).
+    Dump uncaught errors to standard error? (default: true)
 
   * `process.immortal`[=<value>]:
-    Keep running after uncaught error? (default: true).
-
-  * `process.stdin`, `process.stdout`, `process.stderr`:
-    Low-level access to the IO streams.
+    Keep running after uncaught error? (default: true)
 
 ## FLASH BOILERPLATE
 
@@ -94,6 +92,26 @@ _stdin_, _stdout_ and _stderr_).  It then starts Flash Player, passing
 the URL of the web server, the port numbers of the IO servers, and the
 command-line arguments, as special query string parameters to the SWF.
 Environment variables are passed through the same way, verbatim.
+
+## LOW-LEVEL STREAM API
+
+The regular input/output API is line-based.  If you need more control,
+you can access the underlying stream objects.
+
+  * `process.stdin`, `process.stdout`, `process.stderr`:
+    Low-level access to the IO streams.
+
+  * <input_stream>.`ready`:
+    Is there data available on <input_stream> right now?
+
+  * <input_stream>.`read`(<callback>):
+    Read some data from <input_stream> and pass it to <callback>.
+
+  * <output_stream>.`write`(<text>):
+    Write <text> to <output_stream>.
+
+  * <output_stream>.`close`():
+    Close <output_stream>.
 
 ## LIMITATIONS
 
