@@ -6,7 +6,7 @@ package stdio {
       process = local_process
       local_process.connect(callback)
     } else {
-      process = new WebProcess
+      process = new WebProcess(parameters)
       callback()
     }
   }

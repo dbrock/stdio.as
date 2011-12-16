@@ -1,7 +1,7 @@
 package {
   import stdio.process
 
-  function test_local(): void {
+  internal function test_local(): void {
     process.warn(process.env.foo)
     process.gets(function (line: String): void {
       process.puts(line)

@@ -31,18 +31,34 @@ function test_local(swf) {
 
 function test_web(swf, port) {
   var flashplayer
+  var expected_path = "/123"
 
   with_timeout(
     function (callback) {
-      require("http").createServer(function () {
-        flashplayer.kill()
-        this.close()
-        callback()
+      require("http").createServer(function (request, response) {
+        if (request.url === "/crossdomain.xml") {
+          response.writeHead(200, { "content-type": "text/xml" })
+          response.end('\
+<cross-domain-policy>\n\
+  <site-control permitted-cross-domain-policies="master-only"/>\n\
+  <allow-access-from domain="*" to-ports="*"/>\n\
+</cross-domain-policy>\n\
+')
+         } else {
+           flashplayer.kill()
+           this.close()
+           callback(request.url)
+         }
       }).listen(port, function () {
-        flashplayer = start_flashplayer(swf, { port: port })    
+        flashplayer = start_flashplayer(swf, {
+          port: port,
+          path: expected_path
+        })
       })
-    }, function () {
-      test_passed(swf)
+    }, function (actual_path) {
+      test(swf, function () {
+        assert.equal(actual_path, expected_path)
+      })
     }, function () {
       test(swf, function () {
         assert.fail("timeout")
