@@ -63,12 +63,15 @@
     <a href="#SYNOPSIS">SYNOPSIS</a>
     <a href="#DESCRIPTION">DESCRIPTION</a>
     <a href="#ACTIONSCRIPT-API">ACTIONSCRIPT API</a>
+    <a href="#ENVIRONMENT">ENVIRONMENT</a>
     <a href="#FLASH-BOILERPLATE">FLASH BOILERPLATE</a>
     <a href="#FLEX-4-BOILERPLATE">FLEX 4 BOILERPLATE</a>
     <a href="#EXAMPLES">EXAMPLES</a>
     <a href="#HOW-IT-WORKS">HOW IT WORKS</a>
+    <a href="#LOW-LEVEL-STREAM-API">LOW-LEVEL STREAM API</a>
     <a href="#LIMITATIONS">LIMITATIONS</a>
-    <a href="#AUTHOR">AUTHOR</a>
+    <a href="#COPYRIGHT">COPYRIGHT</a>
+    <a href="#WEBSITE">WEBSITE</a>
   </div>
 
   <ol class='man-decor man-head man head'>
@@ -95,25 +98,31 @@
 from stdin and write to stdout/stderr, access enviroment variables,
 and exit with arbitrary status codes.</p>
 
-<p>Yes, your Flash code just became scriptable.</p>
-
 <h2 id="ACTIONSCRIPT-API">ACTIONSCRIPT API</h2>
 
 <p>The global <code>stdio.process</code> object provides the following operations:</p>
 
 <dl>
-<dt><code>process.local</code></dt><dd><p>Is this actually a local process?</p></dd>
-<dt><code>process.env</code></dt><dd><p>The environment of the process.  Equivalent to the SWF query
-string parameters.  Available for both local and web processes.</p></dd>
+<dt><code>process.local</code></dt><dd><p>Is this actually a local process?  (If not, most other operations
+will either do nothing, return nothing, or throw an error.)</p></dd>
+<dt><code>process.env</code></dt><dd><p>The process environment.  Available both locally and on the web.
+Equivalent to the SWF query string parameters.</p></dd>
 <dt><code>process.argv</code></dt><dd><p>The command-line arguments (not including the name of the SWF).</p></dd>
-<dt><code>process.gets</code>(<var>callback</var>)</dt><dd><p>Read one line from standard input, chop off the newline and
+<dt><code>process.gets</code>(<var>callback</var>)</dt><dd><p>Read one line from standard input, chop off the newline, and
 pass it to <var>callback</var>.</p></dd>
 <dt><code>process.puts</code>(<var>text</var>)</dt><dd><p>Write <var>text</var> followed by a newline to standard output.</p></dd>
 <dt><code>process.warn</code>(<var>text</var>)</dt><dd><p>Write <var>text</var> followed by a newline to standard error.</p></dd>
-<dt><code>process.exit</code>([<var>status</var>])</dt><dd><p>Exit the process, returning <var>status</var> (default: 0).</p></dd>
-<dt><code>process.whiny</code>[=<var>value</var>]</dt><dd><p>Dump uncaught errors to standard error? (default: true).</p></dd>
-<dt><code>process.immortal</code>[=<var>value</var>]</dt><dd><p>Keep running after uncaught error? (default: true).</p></dd>
-<dt><code>process.stdin</code>, <code>process.stdout</code>, <code>process.stderr</code></dt><dd><p>Low-level access to the IO streams.</p></dd>
+<dt><code>process.exit</code>([<var>status</var>])</dt><dd><p>Exit the process with code <var>status</var>. (default: 0)</p></dd>
+<dt><code>process.whiny</code>[=<var>value</var>]</dt><dd><p>Dump uncaught errors to standard error? (default: true)</p></dd>
+<dt><code>process.immortal</code>[=<var>value</var>]</dt><dd><p>Keep running after uncaught error? (default: true)</p></dd>
+</dl>
+
+
+<h2 id="ENVIRONMENT">ENVIRONMENT</h2>
+
+<dl>
+<dt><code>FLASHPLAYER</code></dt><dd>The Flash Player executable to use.  (If not specified, <code>run-swf</code>
+will try to find one in a standard location.)</dd>
 </dl>
 
 
@@ -158,21 +167,41 @@ foo: connecting to database: http://localhost:5984/foo
 
 <p>The <code>run-swf</code> wrapper sets up one web server (for serving the SWF and
 accepting commands, like <code>exit</code>) and three raw TCP servers (for piping
-<em>stdin</em>, <em>stdout</em> and <em>stderr</em>).  It then starts Flash Player, passing
+<code>stdin</code>, <code>stdout</code> and <code>stderr</code>).  It then starts Flash Player, passing
 the URL of the web server, the port numbers of the IO servers, and the
 command-line arguments, as special query string parameters to the SWF.
 Environment variables are passed through the same way, verbatim.</p>
 
+<h2 id="LOW-LEVEL-STREAM-API">LOW-LEVEL STREAM API</h2>
+
+<p>The regular input/output API is line-based.  If you need more control,
+you can access the underlying stream objects.</p>
+
+<dl>
+<dt><code>process.stdin</code>, <code>process.stdout</code>, <code>process.stderr</code></dt><dd><p>Low-level access to the IO streams.</p></dd>
+<dt><var>input_stream</var>.<code>ready</code></dt><dd><p>Is there data available on <var>input_stream</var> right now?</p></dd>
+<dt><var>input_stream</var>.<code>read</code>(<var>callback</var>)</dt><dd><p>Read some data from <var>input_stream</var> and pass it to <var>callback</var>.</p></dd>
+<dt><var>output_stream</var>.<code>write</code>(<var>text</var>)</dt><dd><p>Write <var>text</var> to <var>output_stream</var>.</p></dd>
+<dt><var>output_stream</var>.<code>close</code>()</dt><dd><p>Close <var>output_stream</var>.</p></dd>
+</dl>
+
+
 <h2 id="LIMITATIONS">LIMITATIONS</h2>
+
+<p>Only tested on Mac OS X so far.</p>
 
 <p>Currently, <code>run-swf</code> cannot answer <code>&lt;policy-file-request/&gt;</code> queries.
 Therefore, you must run a global policy file server on port <em>843</em>.</p>
 
-<p>Applications cannot yet install signal handlers.</p>
+<p>No support for signal handlers yet.</p>
 
-<h2 id="AUTHOR">AUTHOR</h2>
+<h2 id="COPYRIGHT">COPYRIGHT</h2>
 
-<p>Daniel Brockman, <a href="http://twitter.com/dbrock" data-bare-link="true">http://twitter.com/dbrock</a></p>
+<p>Copyright (C) 2011&nbsp; Daniel Brockman (<a href="http://twitter.com/dbrock">@dbrock</a>)</p>
+
+<h2 id="WEBSITE">WEBSITE</h2>
+
+<p>GitHub project page: <a href="http://github.com/dbrock/flashplayer-stdio" data-bare-link="true">http://github.com/dbrock/flashplayer-stdio</a></p>
 
 
   <ol class='man-decor man-foot man foot'>
