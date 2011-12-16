@@ -43,7 +43,7 @@ package stdio {
     }
 
     public function read(callback: Function): void {
-      add_read_request(new ReadAnythingRequest(this, callback))
+      add_read_request(new ReadChunkRequest(this, callback))
     }
 
     private function add_read_request(request: ReadRequest): void {
@@ -52,7 +52,7 @@ package stdio {
     }
 
     public function get ready(): Boolean {
-      return new ReadAnythingRequest(this, null).ready
+      return new ReadChunkRequest(this, null).ready
     }
   }
 }

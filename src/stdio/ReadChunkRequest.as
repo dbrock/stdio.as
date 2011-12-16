@@ -1,6 +1,6 @@
 package stdio {
-  internal class ReadAnythingRequest extends ReadRequest {
-    public function ReadAnythingRequest(
+  internal class ReadChunkRequest extends ReadRequest {
+    public function ReadChunkRequest(
       stream: StreamBuffer, callback: Function
     ) {super(stream, callback)}
   
