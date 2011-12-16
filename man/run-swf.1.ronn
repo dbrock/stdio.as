@@ -97,6 +97,8 @@ Environment variables are passed through the same way, verbatim.
 Currently, `run-swf` cannot answer `<policy-file-request/>` queries.
 You must run a global policy file server on port _843_.
 
-## AUTHORS
+## AUTHOR
 
-Daniel Brockman, http://twitter.com/dbrock
+Daniel Brockman, [http://twitter.com/dbrock][@dbrock]
+
+[@dbrock]: http://twitter.com/dbrock

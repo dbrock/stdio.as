@@ -7,5 +7,9 @@ build-test: build
 	fcshc stdio.swc test-src/test_local_flex.mxml
 	fcshc stdio.swc test-src/test_web_flash.as --no-rsls
 	fcshc stdio.swc test-src/test_web_flex.mxml
+manual:
+	ronn man/run-swf.1.ronn \
+	  --html --style=man,toc \
+	  --manual="FLASHPLAYER-STDIO"
 clean:
-	rm -f *.swc *.swf
+	rm -f *.swc *.swf man/*.html
