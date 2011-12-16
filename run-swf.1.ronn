@@ -1,0 +1,102 @@
+run-swf(1) -- run Flash applications like normal Unix programs
+==============================================================
+
+## SYNOPSIS
+
+`run-swf` <app>.swf <arguments>...<br>
+`run-swf` <app>.swf &lt; <data> &gt; <result> 2&gt; <log><br>
+<name>=<value> `run-swf` <app>.swf<br>
+`run-swf` <app>.swf ; `echo` $?
+
+## DESCRIPTION
+
+Enable your Flash applications to process command-line arguments, read
+from stdin + write to stdout/stderr, and access enviroment variables.
+
+## EXAMPLES
+
+    $ run-swf echo.swf 1 2 3
+    1 2 3
+
+    $ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2>error.log
+    foo: started
+    foo: connecting to database: http://localhost:5984/foo
+
+## ACTIONSCRIPT API
+
+The global `stdio.process` object provides the following operations:
+
+  * `process.stdio`:
+    Whether or not stdio facilities are available.
+
+  * `process.env`:
+    The environment of the process (equivalent to the query string
+    parameters of the SWF).
+
+  * `process.argv`:
+    The command-line arguments, not including the name of the SWF.
+
+  * `process.gets`(<callback>):
+    Read one line from stdin and pass it to <callback>.
+    The newline is chopped off first.
+
+  * `process.puts`(<text>):
+     Write <text> followed by a newline to stdout.
+
+  * `process.warn`(<text>):
+     Write <text> followed by a newline to stderr.
+
+  * `process.exit`([<status>]):
+    Exit the process, returning <status> (default: `0`).
+
+  * `process.whiny`[=<value>]:
+    Dump uncaught errors to stderr? (default: `true`).
+
+  * `process.immortal`[=<value>]:
+    Keep running after uncaught error? (default: `true`).
+
+  * `process.stdin`, `process.stdout`, `process.stderr`:
+    Low-level access to the IO streams.
+
+## FLASH BOILERPLATE
+
+    package {
+      import stdio.ProcessSprite
+      import stdio.process
+
+      public class hello_world extends ProcessSprite {
+        override public function main(): void {
+          process.puts("Hello, World!")
+        }
+      }
+    }
+
+## FLEX 4 BOILERPLATE
+
+    <stdio:ProcessSparkApplication
+        xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:stdio="stdio.*">
+      <stdio:processReady>
+        import stdio.process
+
+        process.puts("Hello, World!")
+      </stdio:processReady>
+    </stdio:ProcessSparkApplication>
+
+## HOW IT WORKS
+
+The `run-swf` wrapper sets up one web server (for serving the SWF and
+accepting commands, like `exit`) and three raw TCP servers (for piping
+_stdin_, _stdout_ and _stderr_).  It then starts Flash Player, passing
+the URL of the web server, the port numbers of the IO servers, and the
+command-line arguments, as special query string parameters to the SWF.
+Environment variables are passed through the same way, verbatim.
+
+## LIMITATIONS
+
+Currently, `run-swf` cannot answer `<policy-file-request/>` queries.
+You must run a global policy file server on port _843_.
+
+## AUTHORS
+
+Daniel Brockman, http://twitter.com/dbrock
