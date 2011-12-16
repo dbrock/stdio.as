@@ -18,6 +18,5 @@ pages: manual
 	git commit -m "Regenerate man file."
 	git push origin gh-pages
 	git checkout master
-	rm *.html
 clean:
 	rm -f *.swc *.swf man/*.html
