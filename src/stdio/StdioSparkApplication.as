@@ -12,10 +12,10 @@ package stdio {
         dispatchEvent(new Event("processReady"))
       })
 
-      if (process is UnixProcess) {
+      if (process is LocalProcess) {
         addEventListener(
           UncaughtErrorEvent.UNCAUGHT_ERROR,
-          UnixProcess(process).handle_uncaught_error_event
+          LocalProcess(process).handle_uncaught_error_event
         )
       }
     }

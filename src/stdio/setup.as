@@ -1,12 +1,12 @@
 package stdio {
   internal function setup(parameters: Object, callback: Function): void {
-    const unix_process: UnixProcess = new UnixProcess(parameters)
+    const local_process: LocalProcess = new LocalProcess(parameters)
 
-    if (unix_process.stdio) {
-      process = unix_process
-      unix_process.connect(callback)
+    if (local_process.stdio) {
+      process = local_process
+      local_process.connect(callback)
     } else {
-      process = new NullProcess
+      process = new WebProcess
       callback()
     }
   }

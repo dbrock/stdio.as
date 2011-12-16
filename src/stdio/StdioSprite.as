@@ -7,10 +7,10 @@ package stdio {
     public function StdioSprite() {
       setup(loaderInfo.parameters, main)
 
-      if (process is UnixProcess) {
+      if (process is LocalProcess) {
         loaderInfo.uncaughtErrorEvents.addEventListener(
           UncaughtErrorEvent.UNCAUGHT_ERROR,
-          UnixProcess(process).handle_uncaught_error_event
+          LocalProcess(process).handle_uncaught_error_event
         )
       }
     }

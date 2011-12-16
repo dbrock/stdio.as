@@ -3,10 +3,10 @@ package stdio {
   import flash.events.*
   import flash.net.*
 
-  internal class UnixProcess implements IProcess {
+  internal class LocalProcess implements IProcess {
     private var parameters: Object
 
-    public function UnixProcess(parameters: Object) {
+    public function LocalProcess(parameters: Object) {
       this.parameters = parameters
     }
 

@@ -1,7 +1,5 @@
 package stdio {
-  import flash.utils.setTimeout
-
-  internal class NullProcess implements IProcess {
+  internal class WebProcess implements IProcess {
     public function get stdio(): Boolean {return false}
     public function get env(): Object {return {}}
     public function get argv(): Array {return []}
