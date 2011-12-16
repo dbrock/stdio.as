@@ -3,8 +3,8 @@ package stdio {
   import flash.events.*
   import flash.net.*
 
-  public class ProcessSprite extends Sprite {
-    public function ProcessSprite() {
+  public class StdioSprite extends Sprite {
+    public function StdioSprite() {
       setup(loaderInfo.parameters, main)
 
       if (process is UnixProcess) {

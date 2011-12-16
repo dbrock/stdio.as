@@ -30,10 +30,10 @@ Example
 Your basic bare-metal (pure Flash) process looks like this:
 
     package {
-      import stdio.ProcessSprite
+      import stdio.flash.Sprite
       import stdio.process
     
-      public class hello_process extends ProcessSprite {
+      public class hello_process extends Sprite {
         override public function main(): void {
           process.puts("Hello, " + (process.argv[0] || "World") + "!")
         }
@@ -42,15 +42,15 @@ Your basic bare-metal (pure Flash) process looks like this:
 
 Here is the equivalent as a Spark application:
 
-    <stdio:ProcessSparkApplication
+    <stdio:Application
         xmlns:fx="http://ns.adobe.com/mxml/2009"
-        xmlns:stdio="stdio.*">
+        xmlns:stdio="stdio.spark.*">
       <stdio:processReady>
         import stdio.process
     
         process.puts("Hello, " + (process.argv[0] || "World") + "!")
       </stdio:processReady>
-    </stdio:ProcessSparkApplication>
+    </stdio:Application>
 
 Remembering to include `stdio.swc`, you can simply compile these
 applications as usual:

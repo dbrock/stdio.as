@@ -4,7 +4,7 @@ package stdio {
   import spark.components.Application
 
   [Event(name="processReady")]
-  public class ProcessSparkApplication extends Application {
+  public class StdioSparkApplication extends Application {
     override public function initialize(): void {
       super.initialize()
 
