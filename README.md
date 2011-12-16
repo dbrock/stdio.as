@@ -1,6 +1,8 @@
 flashplayer-stdio
 =================
 
+See the [run-swf(1)][] man page for a quick overview.
+
 This package lets you run an ActionScript 3 program as if it were a
 normal Unix process.  Specifically, it provides the ability to
 
@@ -18,6 +20,8 @@ syntax and sending them to stderr.
 Implementations are available for Flex 4 apps and pure Flash apps.
 The main entry points from ActionScript are `stdio.process`,
 `stdio.ProcessSprite` and `stdio.ProcessSparkApplication`.
+
+[run-swf(1)]: http://dbrock.github.com/flashplayer-stdio/run-swf.1
 
 
 Example
