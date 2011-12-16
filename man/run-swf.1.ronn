@@ -13,15 +13,6 @@ run-swf(1) -- run Flash applications like normal Unix programs
 Enable your Flash applications to process command-line arguments, read
 from stdin + write to stdout/stderr, and access enviroment variables.
 
-## EXAMPLES
-
-    $ run-swf echo.swf 1 2 3
-    1 2 3
-
-    $ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2>error.log
-    foo: started
-    foo: connecting to database: http://localhost:5984/foo
-
 ## ACTIONSCRIPT API
 
 The global `stdio.process` object provides the following operations:
@@ -82,6 +73,15 @@ The global `stdio.process` object provides the following operations:
         process.puts("Hello, World!")
       </stdio:processReady>
     </stdio:Application>
+
+## EXAMPLES
+
+    $ run-swf echo.swf 1 2 3
+    1 2 3
+
+    $ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2>error.log
+    foo: started
+    foo: connecting to database: http://localhost:5984/foo
 
 ## HOW IT WORKS
 
