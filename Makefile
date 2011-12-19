@@ -10,7 +10,7 @@ build-test: build
 manual:
 	ronn man/run-swf.1.ronn \
 	  --html --style=man,toc \
-	  --manual="FLASH-STDIO"
+	  --manual="STDIO-FLASH"
 pages: manual
 	git checkout gh-pages
 	cp man/*.html .

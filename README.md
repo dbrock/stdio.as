@@ -1,4 +1,4 @@
-flash-stdio
+stdio-flash
 ===========
 
 **The moving parts you have to keep track of:**
@@ -24,7 +24,7 @@ Implementations are available for both Flex 4 and pure Flash.
 
 **Please see the [run-swf(1)][] man page for more information.**
 
-[run-swf(1)]: http://dbrock.github.com/flash-stdio/run-swf.1
+[run-swf(1)]: http://dbrock.github.com/stdio-flash/run-swf.1
 
 
 Example

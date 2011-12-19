@@ -134,6 +134,6 @@ Copyright (C) 2011&nbsp; Daniel Brockman ([@dbrock][])
 
 ## WEBSITE
 
-GitHub project page: [http://github.com/dbrock/flash-stdio][flash-stdio]
+GitHub project page: [http://github.com/dbrock/stdio-flash][stdio-flash]
 
-[flash-stdio]: http://github.com/dbrock/flash-stdio
+[stdio-flash]: http://github.com/dbrock/stdio-flash
