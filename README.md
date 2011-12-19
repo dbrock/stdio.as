@@ -55,13 +55,14 @@ Here is the equivalent as a Spark application:
       </stdio:main>
     </stdio:Application>
 
-Remembering to include `stdio.swc`, you can simply compile these
-applications as usual:
+Remember to include `stdio.swc` when you compile these applications.
+If you're using [fcshd][], putting `stdio.swc` in your `~/.fcshd-lib'
+and using the `-l` option is the most convenient:
 
-    $ fcshc stdio.swc hello_process.as
-    $ fcshc stdio.swc hello_process_flex.mxml
+    $ fcshc hello_process.as -l stdio
+    $ fcshc hello_process_flex.mxml -l stdio
 
-(See http://github.com/dbrock/fcshd for information about `fcshc`.)
+[fcshd]: http://github.com/dbrock/fcshd
 
 To run an stdio-enabled SWF, use the `run-swf` wrapper:
 
