@@ -56,7 +56,7 @@ Here is the equivalent as a Spark application:
     </stdio:Application>
 
 Remember to include `stdio.swc` when you compile these applications.
-If you're using [fcshd][], putting `stdio.swc` in your `~/.fcshd-lib'
+If you're using [fcshd][], putting `stdio.swc` in your `~/.fcshd-lib`
 and using the `-l` option is the most convenient:
 
     $ fcshc hello_process.as -l stdio
