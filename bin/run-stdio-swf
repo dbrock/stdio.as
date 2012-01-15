@@ -29,7 +29,7 @@ process.on("exit", function () {
 
 process.on("uncaughtException", function (error) {
   kill_flashplayer()
-  console.error("run-swf: internal error: " + error.stack)
+  console.error("run-stdio-swf: internal error: " + error.stack)
   process.exit(-1)
 })
 
@@ -43,7 +43,7 @@ if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
 } else {
   console.error("\
-Usage: [NAME=VALUE...] run-swf PROGRAM.swf [ARGS...] <STDIN >STDOUT 2>STDERR")
+Usage: [VAR=VAL...] run-stdio-swf MAIN.swf [ARGS...] <IN >OUT 2>ERR")
   process.exit(1)
 }
 
@@ -310,12 +310,12 @@ function get_program(filename, callback) {
 function fatal_error(error) {
   var message = error instanceof Error ? error.message : error
 
-  console.error("run-swf: " + message)
+  console.error("run-stdio-swf: " + message)
   process.exit(1)
 }
 
 function debug(message) {
   if (process.env.DEBUG) {
-    console.warn("run-swf: " + message)
+    console.warn("run-stdio-swf: " + message)
   }
 }

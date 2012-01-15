@@ -12,7 +12,7 @@ function test_local(swf) {
       require("child_process").exec([
         "echo", stdin_word, "|",
         "foo=" + env_foo,
-        "bin/run-swf", swf,
+        "bin/run-stdio-swf", swf,
         argv_1
       ].join(" "), callback)
     }, function (error, stdout, stderr) {

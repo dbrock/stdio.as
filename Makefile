@@ -8,9 +8,9 @@ build-test: build
 	fcshc stdio.swc test-src/test_web_flash.as --no-rsls
 	fcshc stdio.swc test-src/test_web_flex.mxml
 manual:
-	ronn man/run-swf.1.ronn \
+	ronn man/run-stdio-swf.1.ronn \
 	  --html --style=man,toc \
-	  --manual="STDIO-FLASH"
+	  --manual="STDIO.AS"
 pages: manual
 	git checkout gh-pages
 	cp man/*.html .
