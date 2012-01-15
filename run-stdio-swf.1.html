@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv='content-type' value='text/html;charset=utf8'>
   <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
-  <title>run-swf(1) - run Flash applications like normal Unix processes</title>
+  <title>run-stdio-swf(1) - run ActionScript programs using stdio.as</title>
   <style type='text/css' media='all'>
   /* style: man */
   body#manpage {margin:0}
@@ -75,22 +75,22 @@
   </div>
 
   <ol class='man-decor man-head man head'>
-    <li class='tl'>run-swf(1)</li>
-    <li class='tc'>STDIO-FLASH</li>
-    <li class='tr'>run-swf(1)</li>
+    <li class='tl'>run-stdio-swf(1)</li>
+    <li class='tc'>STDIO.AS</li>
+    <li class='tr'>run-stdio-swf(1)</li>
   </ol>
 
   <h2 id="NAME">NAME</h2>
 <p class="man-name">
-  <code>run-swf</code> - <span class="man-whatis">run Flash applications like normal Unix processes</span>
+  <code>run-stdio-swf</code> - <span class="man-whatis">run ActionScript programs using stdio.as</span>
 </p>
 
 <h2 id="SYNOPSIS">SYNOPSIS</h2>
 
-<p><code>run-swf</code> <var>app</var>.swf <var>arguments</var>...<br />
-<code>run-swf</code> <var>app</var>.swf &lt; <var>data</var> &gt; <var>result</var> 2&gt; <var>log</var><br />
-<var>name</var>=<var>value</var> <code>run-swf</code> <var>app</var>.swf<br />
-<code>run-swf</code> <var>app</var>.swf ; <code>echo</code> $?</p>
+<p><code>run-stdio-swf</code> <var>app</var>.swf <var>arguments</var>...<br />
+<code>run-stdio-swf</code> <var>app</var>.swf &lt; <var>data</var> &gt; <var>result</var> 2&gt; <var>log</var><br />
+<var>name</var>=<var>value</var> <code>run-stdio-swf</code> <var>app</var>.swf<br />
+<code>run-stdio-swf</code> <var>app</var>.swf ; <code>echo</code> $?</p>
 
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
 
@@ -121,8 +121,8 @@ pass it to <var>callback</var>.</p></dd>
 <h2 id="ENVIRONMENT">ENVIRONMENT</h2>
 
 <dl>
-<dt><code>FLASHPLAYER</code></dt><dd>The Flash Player executable to use.  (If not specified, <code>run-swf</code>
-will try to find one in a standard location.)</dd>
+<dt><code>FLASHPLAYER</code></dt><dd>The Flash Player executable to use.  (If not specified,
+<code>run-stdio-swf</code> will try to find one in a standard location.)</dd>
 </dl>
 
 
@@ -155,22 +155,23 @@ will try to find one in a standard location.)</dd>
 
 <h2 id="EXAMPLES">EXAMPLES</h2>
 
-<pre><code>$ run-swf echo.swf 1 2 3
+<pre><code>$ run-stdio-swf echo.swf 1 2 3
 1 2 3
 
-$ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2&gt;error.log
+$ FOO_DB=http://localhost:5984/foo run-stdio-swf foo.swf 2&gt;error.log
 foo: started
 foo: connecting to database: http://localhost:5984/foo
 </code></pre>
 
 <h2 id="HOW-IT-WORKS">HOW IT WORKS</h2>
 
-<p>The <code>run-swf</code> wrapper sets up one web server (for serving the SWF and
-accepting commands, like <code>exit</code>) and three raw TCP servers (for piping
-<code>stdin</code>, <code>stdout</code> and <code>stderr</code>).  It then starts Flash Player, passing
-the URL of the web server, the port numbers of the IO servers, and the
-command-line arguments, as special query string parameters to the SWF.
-Environment variables are passed through the same way, verbatim.</p>
+<p>The <code>run-stdio-swf</code> wrapper sets up one web server (for serving the
+SWF and accepting commands, like <code>exit</code>) and three raw TCP servers
+(for piping <code>stdin</code>, <code>stdout</code> and <code>stderr</code>).  It then starts Flash
+Player, passing the URL of the web server, the port numbers of the IO
+servers, and the command-line arguments, as special query string
+parameters to the SWF.  Environment variables are passed through the
+same way, verbatim.</p>
 
 <h2 id="LOW-LEVEL-STREAM-API">LOW-LEVEL STREAM API</h2>
 
@@ -190,24 +191,24 @@ you can access the underlying stream objects.</p>
 
 <p>Only tested on Mac OS X so far.</p>
 
-<p>Currently, <code>run-swf</code> cannot answer <code>&lt;policy-file-request/&gt;</code> queries.
+<p>Currently, <code>run-stdio-swf</code> cannot answer <code>&lt;policy-file-request/&gt;</code> queries.
 Therefore, you must run a global policy file server on port <em>843</em>.</p>
 
 <p>No support for signal handlers yet.</p>
 
 <h2 id="COPYRIGHT">COPYRIGHT</h2>
 
-<p>Copyright (C) 2011&nbsp; Daniel Brockman (<a href="http://twitter.com/dbrock">@dbrock</a>)</p>
+<p>Copyright (C) 2011, 2012&nbsp; Daniel Brockman (<a href="http://twitter.com/dbrock">@dbrock</a>)</p>
 
 <h2 id="WEBSITE">WEBSITE</h2>
 
-<p>GitHub project page: <a href="http://github.com/dbrock/stdio-flash" data-bare-link="true">http://github.com/dbrock/stdio-flash</a></p>
+<p>GitHub project page: <a href="[http://github.com/dbrock/stdio.as]">http://github.com/dbrock/stdio.as</a></p>
 
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'></li>
-    <li class='tc'>December 2011</li>
-    <li class='tr'>run-swf(1)</li>
+    <li class='tc'>January 2012</li>
+    <li class='tr'>run-stdio-swf(1)</li>
   </ol>
 
   </div>
