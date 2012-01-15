@@ -115,7 +115,7 @@ function dump_runtime_error(data) {
       var line_number = match[3]
       var text = index === 0 ? "error: " + message + " " : ""
       var content = filename + ":" + line_number + ": " + text
-      var suffix = " " + method 
+      var suffix = " in " + method 
       var pad_length = Math.max(0, 80 - content.length - suffix.length)
       var padding = repeat(" ", pad_length)
 
@@ -128,8 +128,6 @@ function dump_runtime_error(data) {
       console.warn(line)
     }
   })
-
-  draw_horizontal_rule()
   
   function repeat(string, n) {
     return new Array(n + 1).join(string)
