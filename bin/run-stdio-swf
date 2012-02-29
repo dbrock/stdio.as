@@ -7,6 +7,8 @@ var HTTP = require("http")
 var Net = require("net")
 var Path = require("path")
 var URL = require("url")
+var inspect = require("util").inspect
+var fmt = require("util").format
 
 var FLASHPLAYER_PROGRAM_GETTERS = [
   get_FLASHPLAYER_program,
@@ -113,16 +115,16 @@ function dump_runtime_error(data) {
       var method = match[1]
       var filename = Path.relative(process.cwd(), match[2])
       var line_number = match[3]
-      var text = index === 0 ? "error: " + message + " " : ""
-      var content = filename + ":" + line_number + ": " + text
-      var suffix = " in " + method 
+      var text = index === 0 ? fmt("error: %s ", message) : ""
+      var content = fmt("%s:%s: %s", filename, line_number, text)
+      var suffix = fmt(" in %s", method)
       var pad_length = Math.max(0, 80 - content.length - suffix.length)
       var padding = repeat(" ", pad_length)
 
       console.warn(content + padding + suffix)
     } else {
       if (index === 0) {
-        console.warn("error: " + message)
+        console.warn("error: %s", message)
       }
 
       console.warn(line)
@@ -139,14 +141,17 @@ function dump_runtime_error(data) {
 }
 
 function dump_async_runtime_error(data) {
-  console.warn("error: " + get_pretty_async_error_message(data))
+  console.warn(
+    "run-stdio-swf: error: event: %s",
+    get_pretty_async_error_message(data)
+  )
 }
 
 function get_pretty_async_error_message(data) {
   var match = data.trim().match(/^\[(\S+).*? text="(.*)"\]$/)
 
   if (match) {
-    return get_pretty_error_message(match[1] + ": " + match[2])
+    return get_pretty_error_message(fmt("%s: %s", match[1], match[2]))
   } else {
     return data
   }
@@ -158,9 +163,9 @@ function get_pretty_error_message(message) {
   if (message === "TypeError: Error #1009: Cannot access a property or method of a null object reference.") {
     return "null pointer"
   } else if ((match = message.match(/^IOErrorEvent: Error #2032: Stream Error. URL: (.*)$/))) {
-    return "‘" + match[1] + "’ unavailable"
+    return inspect(match[1]) + ": URL not available"
   } else {
-    return message
+    return message.replace(/^Error: /i, "")
   }
 }
 
