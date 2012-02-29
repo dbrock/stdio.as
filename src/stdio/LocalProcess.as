@@ -133,23 +133,24 @@ package stdio {
 
     // -----------------------------------------------------
 
-    internal function handle_uncaught_error_event(
-      event: UncaughtErrorEvent
-    ): void {
-      event.preventDefault()
-
-      if (whiny) {
-        if (event.error is Error) {
-          dump(event.error as Error)
-        } else if (event.error is ErrorEvent) {
-          dump_async(event.error as ErrorEvent)
-        } else {
-          // XXX: Anybody care about this case?
+    internal function handle_uncaught_error(error: *): void {
+      if (error is UncaughtErrorEvent) {
+        UncaughtErrorEvent(error).preventDefault()
+        handle_uncaught_error(UncaughtErrorEvent(error).error)
+      } else {
+        if (whiny) {
+          if (error is Error) {
+            dump(error as Error) // Avoid `Error(x)` casting syntax.
+          } else if (error is ErrorEvent) {
+            dump_async(error as ErrorEvent)
+          } else {
+            // XXX: Anybody care about this case?
+          }
         }
-      }
 
-      if (!immortal) {
-        exit(1)
+        if (!immortal) {
+          exit(1)
+        }
       }
     }
 

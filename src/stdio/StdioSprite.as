@@ -10,7 +10,7 @@ package stdio {
       if (process is LocalProcess) {
         loaderInfo.uncaughtErrorEvents.addEventListener(
           UncaughtErrorEvent.UNCAUGHT_ERROR,
-          LocalProcess(process).handle_uncaught_error_event
+          LocalProcess(process).handle_uncaught_error
         )
       }
     }

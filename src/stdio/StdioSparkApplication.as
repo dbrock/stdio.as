@@ -6,33 +6,26 @@ package stdio {
   [Event(name="main")]
   public class StdioSparkApplication extends Application {
     override public function initialize(): void {
-      super.initialize()
+      // See `spark.components.Application.initialize()`.
+      setup(systemManager.loaderInfo.parameters, $initialize)
+    }
 
-      var application_complete: Boolean = false
-      var stdio_setup_done: Boolean = false
-
-      addEventListener("applicationComplete", function (event: Event): void {
-        application_complete = true
-        maybe_start()
-      })
-
-      setup(parameters, function (): void {
-        stdio_setup_done = true
-        maybe_start()
-      })
-
-      function maybe_start(): void {
-        if (application_complete && stdio_setup_done) {
-          dispatchEvent(new Event("main"))
-        }
-      }
-
+    private function $initialize(): void {
       if (process is LocalProcess) {
-        addEventListener(
+        systemManager.loaderInfo.uncaughtErrorEvents.addEventListener(
           UncaughtErrorEvent.UNCAUGHT_ERROR,
-          LocalProcess(process).handle_uncaught_error_event
+          LocalProcess(process).handle_uncaught_error
         )
       }
+
+      // XXX: This is redundant now.  Keep?
+      addEventListener(
+        "applicationComplete", function (event: Event): void {
+          dispatchEvent(new Event("main"))
+        }
+      )
+
+      super.initialize()
     }
   }
 }
