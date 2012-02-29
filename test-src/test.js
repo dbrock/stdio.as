@@ -1,7 +1,5 @@
 var assert = require("assert")
 
-console.log("1..4")
-
 function test_local(swf) {
   var stdin_word = "hello"
   var env_foo = "bar"
@@ -22,20 +20,24 @@ function test_local(swf) {
         assert.equal(error.code, parseInt(argv_1))
       })
     }, function () {
-      test(swf, function () {
-        assert.fail("timeout")
-      })
+      test_failed(swf, "timeout")
     }
   )
 }
 
 function test_web(swf, port) {
-  var flashplayer
+  var server, flashplayer
   var expected_path = "/123"
+
+  function cleanup() {
+    server && server.close()
+    flashplayer && flashplayer.kill("SIGKILL")
+    server = flashplayer = null
+  }
 
   with_timeout(
     function (callback) {
-      require("http").createServer(function (request, response) {
+      server = require("http").createServer(function (request, response) {
         if (request.url === "/crossdomain.xml") {
           response.writeHead(200, { "content-type": "text/xml" })
           response.end('\
@@ -45,24 +47,24 @@ function test_web(swf, port) {
 </cross-domain-policy>\n\
 ')
          } else {
-           flashplayer.kill()
-           this.close()
            callback(request.url)
          }
-      }).listen(port, function () {
+      })
+
+      server.listen(port, function () {
         flashplayer = start_flashplayer(swf, {
           port: port,
           path: expected_path
         })
       })
     }, function (actual_path) {
+      cleanup()
       test(swf, function () {
         assert.equal(actual_path, expected_path)
       })
     }, function () {
-      test(swf, function () {
-        assert.fail("timeout")
-      })
+      cleanup()
+      test_failed(swf, "timeout")
     }
   )
 }
@@ -105,8 +107,7 @@ function test(name, callback) {
     callback()
     test_passed(name)
   } catch (error) {
-    test_failed(name)
-    throw error
+    test_failed(name, error.toString())
   }
 }
 
@@ -114,8 +115,9 @@ function test_passed(name) {
   console.log("ok - " + name)
 }
 
-function test_failed(name) {
+function test_failed(name, diagnosis) {
   console.log("not ok - " + name)
+  console.log(diagnosis.replace(/^/g, "# "))
 }
 
 //----------------------------------------------------------
