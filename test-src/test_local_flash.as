@@ -1,8 +1,9 @@
 package {
   import stdio.flash.Sprite
 
+  [SWF(width=0, height=0)]
   public class test_local_flash extends Sprite {
-    override public function main(): void {
+    public function main(): void {
       test_local()
     }
   }
