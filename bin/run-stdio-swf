@@ -162,6 +162,8 @@ function get_pretty_error_message(message) {
 
   if (message === "TypeError: Error #1009: Cannot access a property or method of a null object reference.") {
     return "null pointer"
+  } else if ((match = message.match(/^ArgumentError: Error #1063: Argument count mismatch on .*\. Expected (\d+), got (\d+)\.$/))) {
+    return fmt("expected %d arguments, got %d", match[1], match[2])
   } else if ((match = message.match(/^IOErrorEvent: Error #2032: Stream Error. URL: (.*)$/))) {
     return inspect(match[1]) + ": URL not available"
   } else {
