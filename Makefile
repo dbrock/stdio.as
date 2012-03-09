@@ -7,6 +7,9 @@ build-test: build
 	fcshc stdio.swc test-src/test_local_flex.mxml
 	fcshc stdio.swc test-src/test_web_flash.as --no-rsls
 	fcshc stdio.swc test-src/test_web_flex.mxml
+	fcshc stdio.swc test-src/test_readline_flash.as --no-rsls
+test-readline: build-test
+	bin/run-stdio-swf test_readline_flash.swf
 manual:
 	ronn man/run-stdio-swf.1.ronn \
 	  --html --style=man,toc \

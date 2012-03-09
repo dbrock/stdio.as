@@ -23,30 +23,58 @@ process.on("SIGINT", function () {
   process.exit(1)
 })
 
-var flashplayer_process
-
 process.on("exit", function () {
   kill_flashplayer()
 })
 
-process.on("uncaughtException", function (error) {
-  kill_flashplayer()
-  console.error("run-stdio-swf: internal error: " + error.stack)
-  process.exit(-1)
-})
+var flashplayer_process
 
 function kill_flashplayer() {
   if (flashplayer_process) {
-    flashplayer_process.kill()
+    flashplayer_process.kill("SIGKILL")
   }
+}
+
+process.on("uncaughtException", function (error) {
+  kill_flashplayer()
+  fatal_error("internal error: " + error.stack)
+})
+
+function fatal_error(error) {
+  var message = error instanceof Error ? error.message : error
+
+  console.error("run-stdio-swf: " + message)
+  process.exit(-1)
+}
+
+var verbose = false
+
+function trace() {
+  if (verbose) {
+    fmt.apply(null, arguments).split("\n").forEach(function (line) {
+      console.warn("run-stdio-swf: %s", line)
+    })
+  }
+}
+
+if (process.argv[2] === "--verbose") {
+  verbose = true
+  process.argv.splice(2, 1)
+  trace("verbose mode on")
 }
 
 if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
 } else {
   console.error("\
-Usage: [VAR=VAL...] run-stdio-swf MAIN.swf [ARGS...] <IN >OUT 2>ERR")
+Usage: run-stdio-swf [--verbose] PROGRAM.swf [ARGUMENTS...]")
   process.exit(1)
+}
+
+function trace_call(name, args) {
+  trace("%s(%s)", name, [].slice.call(args).map(function (arg) {
+    return inspect(arg)
+  }).join(", "))
 }
 
 function run_swf(filename, argv) {
@@ -61,7 +89,8 @@ function run_swf(filename, argv) {
         "content-type": "application/x-shockwave-flash"
       })
 
-      debug("Sending " + filename)
+      trace("sending file: %s", filename)
+      trace("waiting for connections...")
 
       swf_file.pipe(response)
       swf_file.resume()
@@ -89,16 +118,70 @@ function run_swf(filename, argv) {
     }
   }, function (http_port) {
     open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
-      var url = "http://localhost:" + http_port
+      open_readline_server(function (readline_port) {
+        var url = "http://localhost:" + http_port
 
-      process.env["stdio.service"] = url
-      process.env["stdio.in"] = stdin_port
-      process.env["stdio.out"] = stdout_port
-      process.env["stdio.err"] = stderr_port
-      process.env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
+        process.env["stdio.service"] = url
+        process.env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
+        process.env["stdio.in"] = stdin_port
+        process.env["stdio.out"] = stdout_port
+        process.env["stdio.err"] = stderr_port
+        process.env["stdio.readline"] = readline_port
 
-      run_flashplayer(url, process.env)
+        run_flashplayer(url, process.env)
+      })
     })
+  })
+}
+
+function open_readline_server(callback) {
+  open_server(function (socket) {
+    trace("got readline connection")
+
+    process.stdin.resume()
+
+    var readline = require("readline").createInterface(
+      process.stdin, process.stdout
+    ).on("line", function (line) {
+      trace("read line: %s", inspect(line))
+      lines.push(line)
+      feed()
+    }).on("close", function () {
+      trace("readline: close")
+      socket.end()
+    })
+
+    var n_prompts = 0
+    var lines = []
+
+    function feed() {
+      while (lines.length && n_prompts) {
+        trace("sending line: %s", inspect(lines[0]))
+        socket.write(lines.shift() + "\n")
+        --n_prompts
+      }
+    }
+
+    var buffer = ""
+
+    socket.on("data", function (data) {
+      var prompt, index
+
+      buffer += data.toString()
+
+      if (~(index = buffer.indexOf("\n"))) {
+        prompt = buffer.slice(0, index)
+        buffer = buffer.slice(index)
+        trace("got prompt: %s", inspect(prompt))
+        readline.setPrompt(prompt, prompt.length)
+        readline.prompt()
+        ++n_prompts
+        feed()
+      }
+    })
+  }, function (port) {
+    trace("readline server started on port %d", port)
+    callback(port)
   })
 }
 
@@ -130,7 +213,7 @@ function dump_runtime_error(data) {
       console.warn(line)
     }
   })
-  
+
   function repeat(string, n) {
     return new Array(n + 1).join(string)
   }
@@ -175,14 +258,16 @@ function run_flashplayer(swf_url, parameters) {
   get_flashplayer_program(function (flashplayer_program) {
     var url = swf_url + "?" + require("querystring").stringify(parameters)
 
-    debug(flashplayer_program + " " + url)
+    trace("FLASHPLAYER = %s", inspect(flashplayer_program))
+    trace("%s", inspect(parameters))
+    trace("$ flashplayer %s", encodeURI(url))
 
     flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
 
-    flashplayer_process.stderr.on("data", log_output)
-    flashplayer_process.stdout.on("data", log_output)
+    flashplayer_process.stderr.on("data", log_flashplayer_output)
+    flashplayer_process.stdout.on("data", log_flashplayer_output)
 
-    function log_output(data) {
+    function log_flashplayer_output(data) {
       console.warn("flashplayer: " + data)
     }
 
@@ -203,7 +288,7 @@ function open_http_server(routes, callback) {
     HTTP.createServer(function (request, response) {
       var action = request.method + " " + URL.parse(request.url).pathname
 
-      debug("HTTP " + action)
+      trace("got HTTP " + action)
 
       if (action in routes) {
         routes[action](request, response, fail)
@@ -221,16 +306,21 @@ function open_http_server(routes, callback) {
 
 function open_stdio_servers(callback) {
   open_server(function (socket) {
+    trace("got stdin connection")
     process.stdin.pipe(socket)
     process.stdin.resume()
-  }, function (stdin_porn) {
+  }, function (stdin_port) {
     open_server(function (socket) {
+      trace("got stdout connection")
       socket.pipe(process.stdout)
     }, function (stdout_port) {
       open_server(function (socket) {
+        trace("got stderr connection")
         socket.pipe(process.stderr)
       }, function (stderr_port) {
-        callback(stdin_porn, stdout_port, stderr_port)
+        trace("stdio servers started on ports %d, %d, %d",
+              stdin_port, stdout_port, stderr_port)
+        callback(stdin_port, stdout_port, stderr_port)
       })
     })
   })
@@ -252,6 +342,7 @@ function get_random_port() {
 function bind_server(server, callback) {
   server.on("error", function (error) {
     if (error.code == "EADDRINUSE") {
+      trace("got EADDRINUSE for %d; trying another port", port)
       bind_server(server, callback)
     } else {
       throw error
@@ -310,17 +401,4 @@ function get_program(filename, callback) {
   Path.exists(filename, function (exists) {
     callback(exists ? filename : null)
   })
-}
-
-function fatal_error(error) {
-  var message = error instanceof Error ? error.message : error
-
-  console.error("run-stdio-swf: " + message)
-  process.exit(1)
-}
-
-function debug(message) {
-  if (process.env.DEBUG) {
-    console.warn("run-stdio-swf: " + message)
-  }
 }

@@ -1,13 +1,16 @@
 package stdio {
   import flash.display.*
   import flash.events.*
+  import flash.utils.*
   import flash.net.*
 
   internal class LocalProcess implements IProcess {
     private var parameters: Object
+    private var interactive: Boolean
 
-    public function LocalProcess(parameters: Object) {
+    public function LocalProcess(parameters: Object, interactive: Boolean) {
       this.parameters = parameters
+      this.interactive = interactive
     }
 
     internal function get available(): Boolean {
@@ -26,6 +29,7 @@ package stdio {
 
     internal function connect(callback: Function): void {
       stdin_socket.onopen = onopen
+      readline_socket.onopen = onopen
       stdout_socket.onopen = onopen
       stderr_socket.onopen = onopen
 
@@ -39,10 +43,23 @@ package stdio {
 
       stdin_socket.ondata = stdin_buffer.write
       stdin_socket.onclose = stdin_buffer.close
+      readline_socket.ondata = stdin_buffer.write
+      readline_socket.onclose = stdin_buffer.close
 
-      stdin_socket.connect("localhost", get_int("stdio.in"))
-      stdout_socket.connect("localhost", get_int("stdio.out"))
-      stderr_socket.connect("localhost", get_int("stdio.err"))
+      const in_port: int = get_int("stdio.in")
+      const readline_port: int = get_int("stdio.readline")
+
+      if (interactive) {
+        readline_socket.connect("localhost", readline_port)
+      } else {
+        stdin_socket.connect("localhost", in_port)
+      }
+
+      const out_port: int = get_int("stdio.out")
+      const err_port: int = get_int("stdio.err")
+
+      stdout_socket.connect("localhost", out_port)
+      stderr_socket.connect("localhost", err_port)
 
       function get_int(name: String): int {
         return parseInt(parameters[name])
@@ -51,6 +68,7 @@ package stdio {
 
     private const stdin_buffer: StreamBuffer = new StreamBuffer
     private const stdin_socket: SocketStream = new SocketStream
+    private const readline_socket: SocketStream = new SocketStream
 
     private const stdout_socket: SocketStream = new SocketStream
     private const stderr_socket: SocketStream = new SocketStream
@@ -72,7 +90,20 @@ package stdio {
     // -----------------------------------------------------
 
     public function gets(callback: Function): void {
-      stdin.gets(callback)
+      if (!interactive) {
+        stdin.gets(callback)
+      } else {
+        throw new Error("use `ask' for interactive processes")
+      }
+    }
+
+    public function ask(prompt: String, callback: Function): void {
+      if (interactive) {
+        readline_socket.puts(prompt)
+        stdin.gets(callback)
+      } else {
+        throw new Error("use `gets' for noninteractive processes")
+      }
     }
 
     public function get stdin(): InputStream {

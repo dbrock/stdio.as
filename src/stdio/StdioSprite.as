@@ -1,18 +1,13 @@
 package stdio {
-  import flash.display.*
-  import flash.events.*
-  import flash.net.*
+  import flash.display.Sprite
 
   public class StdioSprite extends Sprite {
     public function StdioSprite() {
-      setup(loaderInfo.parameters, start)
+      setup(loaderInfo, interactive, start)
+    }
 
-      if (process is LocalProcess) {
-        loaderInfo.uncaughtErrorEvents.addEventListener(
-          UncaughtErrorEvent.UNCAUGHT_ERROR,
-          LocalProcess(process).handle_uncaught_error
-        )
-      }
+    protected function get interactive(): Boolean {
+      return false
     }
 
     private function start(): void {

@@ -27,8 +27,8 @@ package stdio {
       addEventListener(SecurityErrorEvent.SECURITY_ERROR, handle_error)
     }
 
-    private function handle_error(event: Event): void {
-      throw new Error(event.toString())
+    private function handle_error(event: ErrorEvent): void {
+      throw new Error(event.text)
     }
 
     public function puts(value: Object): void {

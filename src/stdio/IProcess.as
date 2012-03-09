@@ -18,7 +18,11 @@ package stdio {
     function gets(callback: Function): void
     function get stdin(): InputStream
 
-    // Write something + newline to standard output.
+    // Read one line from the terminal using readline.  To use this
+    // method you must set `interactive = true` in your constructor.
+    function ask(prompt: String, callback: Function): void
+
+    // Write something followed by a newline to standard output.
     function puts(value: Object): void
     function get stdout(): OutputStream
 

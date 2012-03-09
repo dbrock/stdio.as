@@ -124,7 +124,15 @@ function test_failed(name, diagnosis) {
 //----------------------------------------------------------
 
 test_web("test_web_flash.swf", 56788)
-test_web("test_web_flex.swf", 56789)
-
 test_local("test_local_flash.swf")
-test_local("test_local_flex.swf")
+
+// To omit the Flex tests, use `make flex=no`.
+if (process.env.flex !== "no") {
+  test_web("test_web_flex.swf", 56789)
+  test_local("test_local_flex.swf")
+}
+
+process.on("exit", function () {
+  console.warn("# To manually test readline functionality:")
+  console.warn("# make test-readline")
+})
