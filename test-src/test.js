@@ -41,6 +41,7 @@ function test_web(swf, port) {
         if (request.url === "/crossdomain.xml") {
           response.writeHead(200, { "content-type": "text/xml" })
           response.end('\
+<?xml version="1.0"?>\n\
 <cross-domain-policy>\n\
   <site-control permitted-cross-domain-policies="master-only"/>\n\
   <allow-access-from domain="*" to-ports="*"/>\n\
