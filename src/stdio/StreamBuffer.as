@@ -22,18 +22,10 @@ package stdio {
     private const requests: Array = []
 
     private function satisfy_read_requests(): void {
-      while (has_requests && next_request.ready) {
-        next_request.satisfy()
-        requests.shift()
+      while (requests.length > 0 && requests[0].ready) {
+        // Note: `shift()` must run before `satisfy()`.
+        requests.shift().satisfy()
       }
-    }
-
-    private function get has_requests(): Boolean {
-      return requests.length > 0
-    }
-
-    private function get next_request(): ReadRequest {
-      return requests[0]
     }
 
     // -----------------------------------------------------
