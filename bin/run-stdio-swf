@@ -162,22 +162,36 @@ function open_readline_server(callback) {
       }
     }
 
+    function ask(prompt) {
+      trace("got prompt: %s", inspect(prompt))
+      readline.setPrompt(prompt, prompt.length)
+      readline.prompt()
+      ++n_prompts
+      feed()
+    }
+
+    function say(line) {
+      trace("got output: %s", inspect(line))
+      console.log("%s", line)
+    }
+
     var buffer = ""
 
     socket.on("data", function (data) {
-      var prompt, index
+      var line, index
 
-      trace("got prompt data: %s", inspect(data))
+      trace("got readline data: %s", inspect(data.toString()))
       buffer += data.toString()
 
-      if (~(index = buffer.indexOf("\n"))) {
-        prompt = buffer.slice(0, index)
+      while (~(index = buffer.indexOf("\n"))) {
+        line = buffer.slice(0, index)
         buffer = buffer.slice(index + 1)
-        trace("got prompt: %s", inspect(prompt))
-        readline.setPrompt(prompt, prompt.length)
-        readline.prompt()
-        ++n_prompts
-        feed()
+
+        if (line.charAt(0) === "?") {
+          ask(line.slice(1))
+        } else {
+          say(line.replace(/^!/, ""))
+        }
       }
     })
   }, function (port) {

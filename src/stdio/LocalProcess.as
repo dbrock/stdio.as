@@ -99,7 +99,7 @@ package stdio {
 
     public function ask(prompt: String, callback: Function): void {
       if (interactive) {
-        readline_socket.puts(prompt)
+        readline_socket.puts("?" + prompt)
         stdin.gets(callback)
       } else {
         throw new Error("use `gets' for noninteractive processes")
@@ -113,7 +113,11 @@ package stdio {
     // -----------------------------------------------------
 
     public function puts(value: Object): void {
-      stdout.puts(value)
+      if (interactive) {
+        readline_socket.puts("!" + String(value))
+      } else {
+        stdout.puts(value)
+      }
     }
 
     public function get stdout(): OutputStream {
