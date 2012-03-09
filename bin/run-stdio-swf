@@ -167,11 +167,12 @@ function open_readline_server(callback) {
     socket.on("data", function (data) {
       var prompt, index
 
+      trace("got prompt data: %s", inspect(data))
       buffer += data.toString()
 
       if (~(index = buffer.indexOf("\n"))) {
         prompt = buffer.slice(0, index)
-        buffer = buffer.slice(index)
+        buffer = buffer.slice(index + 1)
         trace("got prompt: %s", inspect(prompt))
         readline.setPrompt(prompt, prompt.length)
         readline.prompt()
