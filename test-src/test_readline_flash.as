@@ -9,9 +9,11 @@ package {
     }
 
     public function main(): void {
-      process.ask("What’s your name? ", function (name: String): void {
+      process.prompt = "What’s your name? "
+      process.gets(function (name: String): void {
         process.puts("Hello, " + name + "!")
-        process.ask("Favorite color? ", function (color: String): void {
+        process.prompt = "Favorite color? "
+        process.gets(function (color: String): void {
           process.puts("I like " + color + " too!")
           process.exit()
         })

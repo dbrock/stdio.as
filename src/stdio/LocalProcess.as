@@ -8,6 +8,8 @@ package stdio {
     private var parameters: Object
     private var interactive: Boolean
 
+    private var _prompt: String = "> "
+
     public function LocalProcess(parameters: Object, interactive: Boolean) {
       this.parameters = parameters
       this.interactive = interactive
@@ -90,20 +92,15 @@ package stdio {
     // -----------------------------------------------------
 
     public function gets(callback: Function): void {
-      if (!interactive) {
-        stdin.gets(callback)
-      } else {
-        throw new Error("use `ask' for interactive processes")
+      if (interactive) {
+        readline_socket.puts("?" + _prompt)
       }
+
+      stdin.gets(callback)
     }
 
-    public function ask(prompt: String, callback: Function): void {
-      if (interactive) {
-        readline_socket.puts("?" + prompt)
-        stdin.gets(callback)
-      } else {
-        throw new Error("use `gets' for noninteractive processes")
-      }
+    public function set prompt(value: String): void {
+      _prompt = value
     }
 
     public function get stdin(): InputStream {

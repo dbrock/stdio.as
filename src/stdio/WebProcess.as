@@ -9,9 +9,9 @@ package stdio {
     public function get local(): Boolean {return false}
     public function get env(): Object {return parameters}
     public function get argv(): Array {return []}
-    public function gets(cb: Function): void {throw new Error}
+    public function gets(callback: Function): void {throw new Error}
     public function get stdin(): InputStream {return null}
-    public function ask(prompt: String, cb: Function): void {throw new Error}
+    public function set prompt(value: String): void {}
     public function puts(value: Object): void {}
     public function get stdout(): OutputStream {return null}
     public function warn(value: Object): void {}
