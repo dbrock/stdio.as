@@ -51,6 +51,10 @@ package stdio {
       satisfy_read_requests()
     }
 
+    public function get emptied(): Boolean {
+      return closed && !buffer.length
+    }
+
     public function get ready(): Boolean {
       return new ReadChunkRequest(this, null).ready
     }
