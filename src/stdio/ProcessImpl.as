@@ -124,6 +124,26 @@ package stdio {
       _prompt = value
     }
 
+    public function format(pattern: String): String {
+      const codes: Object = {
+        none: 0, bold: 1, italic: 3, underline: 4, inverse: 7,
+        black: 30, red: 31, green: 32, yellow: 33, blue: 34,
+        magenta: 35, cyan: 36, white: 37, gray: 90, grey: 90
+      }
+
+      return pattern.replace(/%(?:%|\{([a-z]+)\})/g,
+        function (match: String, name: String, ...rest: Array): String {
+          if (match === "%%") {
+            return "%"
+          } else if (name in codes) {
+            return "\x1b[" + codes[name] + "m"
+          } else {
+            throw new Error("not supported: " + match)
+          }
+        }
+      )
+    }
+
     public function get stdin(): InputStream {
       return stdin_buffer
     }
@@ -139,7 +159,7 @@ package stdio {
     public function exit(status: int = 0): void {
       if (available) {
         when_ready(function (): void {
-          http_post("/exit", status.toString())
+          http_post("/exit", String(status))
         })
       } else {
         throw new Error("cannot exit: process not available")
