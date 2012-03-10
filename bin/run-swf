@@ -43,7 +43,7 @@ process.on("uncaughtException", function (error) {
 function fatal_error(error) {
   var message = error instanceof Error ? error.message : error
 
-  console.error("run-stdio-swf: " + message)
+  console.error("run-swf: " + message)
   process.exit(-1)
 }
 
@@ -52,7 +52,7 @@ var verbose = false
 function trace() {
   if (verbose) {
     fmt.apply(null, arguments).split("\n").forEach(function (line) {
-      console.warn("run-stdio-swf: %s", line)
+      console.warn("run-swf: %s", line)
     })
   }
 }
@@ -67,7 +67,7 @@ if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
 } else {
   console.error("\
-Usage: run-stdio-swf [--verbose] PROGRAM.swf [ARGUMENTS...]")
+Usage: run-swf [--verbose] PROGRAM.swf [ARGUMENTS...]")
   process.exit(1)
 }
 
@@ -244,7 +244,7 @@ function dump_runtime_error(data) {
 
 function dump_async_runtime_error(data) {
   console.warn(
-    "run-stdio-swf: error: event: %s",
+    "run-swf: error: event: %s",
     get_pretty_async_error_message(data)
   )
 }

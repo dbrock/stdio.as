@@ -4,7 +4,7 @@ stdio.as
 **The moving parts you have to keep track of:**
 
 * `stdio.swc`: the library used by your ActionScript code.
-* **[run-stdio-swf(1)][]**: the executable used to run your SWFs.
+* **[run-swf(1)][]**: the executable used to run your SWFs.
 
 **The wondrous capabilities of a good old Unix process which are
 henceforth available to your locally-running Flash applications:**
@@ -22,9 +22,9 @@ easy to read, both for programmers, and for our tools (e.g., Emacs).
 
 Implementations are available for both Flex 4 and pure Flash.
 
-**Please see the [run-stdio-swf(1)][] man page for more information.**
+**Please see the [run-swf(1)][] man page for more information.**
 
-[run-stdio-swf(1)]: http://dbrock.github.com/stdio.as/run-stdio-swf.1
+[run-swf(1)]: http://dbrock.github.com/stdio.as/run-swf.1
 
 
 Example
@@ -64,11 +64,11 @@ and using the `-l` option is the most convenient:
 
 [fcshd]: http://github.com/dbrock/fcshd
 
-To run an stdio-enabled SWF, use the `run-stdio-swf` wrapper:
+To run an stdio-enabled SWF, use the `run-swf` wrapper:
 
-    $ run-stdio-swf hello_process.swf
+    $ run-swf hello_process.swf
     Hello, World!
-    $ run-stdio-swf hello_process_flex.swf Galaxy
+    $ run-swf hello_process_flex.swf Galaxy
     Hello, Galaxy!
 
 (Unfortunately, I know of no way to suppress the Flash Player window,

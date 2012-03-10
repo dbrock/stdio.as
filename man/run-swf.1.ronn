@@ -1,12 +1,12 @@
-run-stdio-swf(1) -- run ActionScript programs using stdio.as
-============================================================
+run-swf(1) -- run ActionScript programs using stdio.as
+======================================================
 
 ## SYNOPSIS
 
-`run-stdio-swf` <app>.swf <arguments>...<br>
-`run-stdio-swf` <app>.swf &lt; <data> &gt; <result> 2&gt; <log><br>
-<name>=<value> `run-stdio-swf` <app>.swf<br>
-`run-stdio-swf` <app>.swf ; `echo` $?
+`run-swf` <app>.swf <arguments>...<br>
+`run-swf` <app>.swf &lt; <data> &gt; <result> 2&gt; <log><br>
+<name>=<value> `run-swf` <app>.swf<br>
+`run-swf` <app>.swf ; `echo` $?
 
 ## DESCRIPTION
 
@@ -16,7 +16,7 @@ and exit with arbitrary status codes.
 
 ## ACTIONSCRIPT API
 
-The global `stdio.process` object provides the following operations:
+The global `process` object provides the following operations:
 
   * `process.env`:
     The environment, or the query parameters.
@@ -44,7 +44,7 @@ The global `stdio.process` object provides the following operations:
 
   * `FLASHPLAYER`:
     The Flash Player executable to use.  (If not specified,
-    `run-stdio-swf` will try to find one in a standard location.)
+    `run-swf` will try to find one in a standard location.)
 
 ## FLASH BOILERPLATE
 
@@ -73,22 +73,21 @@ The global `stdio.process` object provides the following operations:
 
 ## EXAMPLES
 
-    $ run-stdio-swf echo.swf 1 2 3
+    $ run-swf echo.swf 1 2 3
     1 2 3
 
-    $ FOO_DB=http://localhost:5984/foo run-stdio-swf foo.swf 2>error.log
+    $ FOO_DB=http://localhost:5984/foo run-swf foo.swf 2>error.log
     foo: started
     foo: connecting to database: http://localhost:5984/foo
 
 ## HOW IT WORKS
 
-The `run-stdio-swf` wrapper sets up one web server (for serving the
-SWF and accepting commands, like `exit`) and three raw TCP servers
-(for piping `stdin`, `stdout` and `stderr`).  It then starts Flash
-Player, passing the URL of the web server, the port numbers of the IO
-servers, and the command-line arguments, as special query string
-parameters to the SWF.  Environment variables are passed through the
-same way, verbatim.
+The `run-swf` wrapper sets up one web server (for serving the SWF and
+accepting commands, like `exit`) and three raw TCP servers (for piping
+`stdin`, `stdout` and `stderr`).  It then starts Flash Player, passing
+the URL of the web server, the port numbers of the IO servers, and the
+command-line arguments, as special query string parameters to the SWF.
+Environment variables are passed through the same way, verbatim.
 
 ## LOW-LEVEL STREAM API
 
@@ -114,7 +113,7 @@ you can access the underlying stream objects.
 
 Only tested on Mac OS X so far.
 
-Currently, `run-stdio-swf` cannot answer `<policy-file-request/>` queries.
+Currently, `run-swf` cannot answer `<policy-file-request/>` queries.
 Therefore, you must run a global policy file server on port _843_.
 
 No support for signal handlers yet.
