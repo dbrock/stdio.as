@@ -42,9 +42,6 @@ The global `stdio.process` object provides the following operations:
   * `process.exit`([<status>]):
     Exit the process with code <status>. (default: 0)
 
-  * `process.whiny`[=<value>]:
-    Dump uncaught errors to standard error? (default: true)
-
   * `process.immortal`[=<value>]:
     Keep running after uncaught error? (default: true)
 

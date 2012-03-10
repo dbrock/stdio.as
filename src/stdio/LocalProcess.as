@@ -151,13 +151,6 @@ package stdio {
 
     // -----------------------------------------------------
 
-    private var _whiny: Boolean = true
-
-    public function get whiny(): Boolean {return _whiny}
-    public function set whiny(value: Boolean): void {_whiny = value}
-
-    // -----------------------------------------------------
-
     private var _immortal: Boolean = true
 
     public function get immortal(): Boolean {return _immortal}
@@ -170,14 +163,12 @@ package stdio {
         UncaughtErrorEvent(error).preventDefault()
         handle_uncaught_error(UncaughtErrorEvent(error).error)
       } else {
-        if (whiny) {
-          if (error is Error) {
-            dump(error as Error) // Avoid `Error(x)` casting syntax.
-          } else if (error is ErrorEvent) {
-            dump_async(error as ErrorEvent)
-          } else {
-            // XXX: Anybody care about this case?
-          }
+        if (error is Error) {
+          dump(error as Error) // Avoid `Error(x)` casting syntax.
+        } else if (error is ErrorEvent) {
+          dump_async(error as ErrorEvent)
+        } else {
+          // XXX: Anybody care about this case?
         }
 
         if (!immortal) {

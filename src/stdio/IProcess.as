@@ -32,10 +32,6 @@ package stdio {
     // Exit the process with the given status code.
     function exit(status: int = 0): void
 
-    // Whether uncaught errors are dumped to stderr.
-    function get whiny(): Boolean
-    function set whiny(value: Boolean): void
-
     // Whether an uncaught error kills the process.
     function get immortal(): Boolean
     function set immortal(value: Boolean): void
