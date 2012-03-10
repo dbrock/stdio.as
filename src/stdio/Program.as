@@ -1,8 +1,8 @@
 package stdio {
   import flash.display.Sprite
 
-  public class StdioSprite extends Sprite {
-    public function StdioSprite() {
+  public class Program extends Sprite {
+    public function Program() {
       setup(loaderInfo, this is REPL, start)
     }
 
@@ -17,7 +17,7 @@ package stdio {
     }
 
     private function warn(message: String): void {
-      process.warn("stdio.flash.Sprite: " + message)
+      process.warn("stdio.Program: " + message)
     }
   }
 }

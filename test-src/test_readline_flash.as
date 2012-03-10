@@ -1,11 +1,8 @@
 package {
-  import stdio.colorize
-  import stdio.flash.Sprite
-  import stdio.process
-  import stdio.REPL
+  import stdio.*
 
   [SWF(width=0, height=0)]
-  public class test_readline_flash extends Sprite implements REPL {
+  public class test_readline_flash extends Program implements REPL {
     public function main(): void {
       process.prompt = "What’s your name? "
       process.gets(function (name: String): void {
