@@ -3,7 +3,7 @@ package stdio {
 
   public class StdioSprite extends Sprite {
     public function StdioSprite() {
-      setup(loaderInfo, this is Interactive, start)
+      setup(loaderInfo, this is REPL, start)
     }
 
     private function start(): void {
