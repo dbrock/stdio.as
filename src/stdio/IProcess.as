@@ -1,10 +1,5 @@
 package stdio {
   public interface IProcess {
-    // Whether or not this is actually a local process.
-    // Most stdio facilities are only available for local
-    // processes, but the environment is always available.
-    function get local(): Boolean
-
     // The environment of the process. This is equivalent
     // to the query string parameters of the SWF.
     function get env(): Object

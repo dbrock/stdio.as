@@ -6,7 +6,6 @@ package stdio {
       this.parameters = parameters
     }
 
-    public function get local(): Boolean {return false}
     public function get env(): Object {return parameters}
     public function get argv(): Array {return []}
     public function gets(callback: Function): void {throw new Error}

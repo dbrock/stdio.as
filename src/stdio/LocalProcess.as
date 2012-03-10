@@ -19,10 +19,6 @@ package stdio {
       return !!service_url
     }
 
-    public function get local(): Boolean {
-      return true
-    }
-
     private function get service_url(): String {
       return parameters["stdio.service"]
     }

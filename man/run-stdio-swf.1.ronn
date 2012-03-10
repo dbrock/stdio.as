@@ -18,13 +18,8 @@ and exit with arbitrary status codes.
 
 The global `stdio.process` object provides the following operations:
 
-  * `process.local`:
-    Is this actually a local process?  (If not, most other operations
-    will either do nothing, return nothing, or throw an error.)
-
   * `process.env`:
-    The process environment.  Available both locally and on the web.
-    Equivalent to the SWF query string parameters.
+    The environment, or the query parameters.
 
   * `process.argv`:
     The command-line arguments (not including the name of the SWF).
