@@ -38,7 +38,7 @@ package stdio {
     public function write(value: Object): void {
       writeUTFBytes(value.toString())
     }
-
-    // close() already implemented by Socket.
   }
 }
+
+function noop(...rest: Array): void {}
