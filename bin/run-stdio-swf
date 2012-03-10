@@ -164,10 +164,14 @@ function open_readline_server(callback) {
 
     function ask(prompt) {
       trace("got prompt: %s", inspect(prompt))
-      readline.setPrompt(prompt, prompt.length)
+      readline.setPrompt(prompt, strip_colors(prompt).length)
       readline.prompt()
       ++n_prompts
       feed()
+    }
+
+    function strip_colors(string) {
+      return string.replace(/\x1b\[\d+(;\d+)?m/g, "")
     }
 
     function say(line) {
