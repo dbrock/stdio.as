@@ -42,9 +42,6 @@ The global `stdio.process` object provides the following operations:
   * `process.exit`([<status>]):
     Exit the process with code <status>. (default: 0)
 
-  * `process.immortal`[=<value>]:
-    Keep running after uncaught error? (default: true)
-
 ## ENVIRONMENT
 
   * `FLASHPLAYER`:

@@ -139,44 +139,6 @@ package stdio {
       })
     }
 
-    private function dump(error: Error): void {
-      http_post("/error", error.getStackTrace())
-    }
-
-    private function dump_async(event: ErrorEvent): void {
-      http_post("/async-error", event.toString())
-    }
-
-    // See below for http_post().
-
-    // -----------------------------------------------------
-
-    private var _immortal: Boolean = true
-
-    public function get immortal(): Boolean {return _immortal}
-    public function set immortal(value: Boolean): void {_immortal = value}
-
-    // -----------------------------------------------------
-
-    internal function handle_uncaught_error(error: *): void {
-      if (error is UncaughtErrorEvent) {
-        UncaughtErrorEvent(error).preventDefault()
-        handle_uncaught_error(UncaughtErrorEvent(error).error)
-      } else {
-        if (error is Error) {
-          dump(error as Error) // Avoid `Error(x)` casting syntax.
-        } else if (error is ErrorEvent) {
-          dump_async(error as ErrorEvent)
-        } else {
-          // XXX: Anybody care about this case?
-        }
-
-        if (!immortal) {
-          exit(1)
-        }
-      }
-    }
-
     private var n_pending_requests: int = 0
     private var ready_callbacks: Array = []
 
@@ -194,6 +156,22 @@ package stdio {
       }
 
       ready_callbacks = []
+    }
+
+    // -----------------------------------------------------
+
+    internal function handle_uncaught_error(error: *): void {
+      if (error is UncaughtErrorEvent) {
+        UncaughtErrorEvent(error).preventDefault()
+        handle_uncaught_error(UncaughtErrorEvent(error).error)
+      } else if (error is Error) {
+        // Important: Avoid the `Error(x)` casting syntax.
+        http_post("/error", (error as Error).getStackTrace())
+      } else if (error is ErrorEvent) {
+        http_post("/async-error", (error as ErrorEvent).toString())
+      } else {
+        // XXX: Anybody care about this case?
+      }
     }
 
     private function http_post(path: String, content: String): void {

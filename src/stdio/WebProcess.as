@@ -17,7 +17,5 @@ package stdio {
     public function warn(value: Object): void {}
     public function get stderr(): OutputStream {return null}
     public function exit(status: int = 0): void {}
-    public function get immortal(): Boolean {return true}
-    public function set immortal(value: Boolean): void {throw new Error}
   }
 }
