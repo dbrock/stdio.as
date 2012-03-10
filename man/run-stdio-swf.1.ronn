@@ -28,6 +28,9 @@ The global `stdio.process` object provides the following operations:
     Read one line from standard input, chop off the newline, and
     pass it to <callback>.
 
+  * `process.prompt`[=<value>]:
+    The prompt to use in interactive mode (default: "> ").
+
   * `process.puts`(<text>):
     Write <text> followed by a newline to standard output.
 

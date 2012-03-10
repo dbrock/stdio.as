@@ -87,6 +87,20 @@ package stdio {
 
     // -----------------------------------------------------
 
+    public function puts(value: Object): void {
+      if (interactive) {
+        readline_socket.puts("!" + String(value))
+      } else {
+        stdout.puts(value)
+      }
+    }
+
+    public function warn(value: Object): void {
+      stderr.puts(value)
+    }
+
+    // -----------------------------------------------------
+
     public function gets(callback: Function): void {
       if (interactive) {
         readline_socket.puts("?" + _prompt)
@@ -99,28 +113,14 @@ package stdio {
       _prompt = value
     }
 
+    // -----------------------------------------------------
+
     public function get stdin(): InputStream {
       return stdin_buffer
     }
 
-    // -----------------------------------------------------
-
-    public function puts(value: Object): void {
-      if (interactive) {
-        readline_socket.puts("!" + String(value))
-      } else {
-        stdout.puts(value)
-      }
-    }
-
     public function get stdout(): OutputStream {
       return stdout_socket
-    }
-
-    // -----------------------------------------------------
-
-    public function warn(value: Object): void {
-      stderr.puts(value)
     }
 
     public function get stderr(): OutputStream {
@@ -134,6 +134,8 @@ package stdio {
         http_post("/exit", status.toString())
       })
     }
+
+    // -----------------------------------------------------
 
     private var n_pending_requests: int = 0
     private var ready_callbacks: Array = []
@@ -153,8 +155,6 @@ package stdio {
 
       ready_callbacks = []
     }
-
-    // -----------------------------------------------------
 
     internal function handle_uncaught_error(error: *): void {
       if (error is UncaughtErrorEvent) {
