@@ -4,7 +4,7 @@ package stdio {
   import flash.utils.*
   import flash.net.*
 
-  internal class ProcessImpl implements Process {
+  public class SocketProcess implements Process {
     private const buffered_stdin: BufferedStream = new BufferedStream
     private const stdin_socket: SocketStream = new SocketStream
     private const readline_socket: SocketStream = new SocketStream
@@ -15,7 +15,7 @@ package stdio {
     private var _env: Object
     private var _prompt: String = "> "
 
-    public function ProcessImpl(env: Object) {
+    public function SocketProcess(env: Object) {
       _env = env
     }
 

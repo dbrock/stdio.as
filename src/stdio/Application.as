@@ -10,14 +10,14 @@ package stdio {
 
       env["stdio.interactive"] = String(this is Interactive)
 
-      process = new ProcessImpl(env)
-      ProcessImpl(process).initialize(start)
+      process = new SocketProcess(env)
+      SocketProcess(process).initialize(start)
     }
 
     private function start(): void {
       systemManager.loaderInfo.uncaughtErrorEvents.addEventListener(
         UncaughtErrorEvent.UNCAUGHT_ERROR,
-        ProcessImpl(process).handle_uncaught_error
+        SocketProcess(process).handle_uncaught_error
       )
 
       addEventListener(

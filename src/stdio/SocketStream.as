@@ -8,19 +8,11 @@ package stdio {
     public var onclose: Function = noop
 
     public function SocketStream() {
-      addEventListener(Event.CONNECT, function (event: Event): void {
-        onopen()
-      })
+      addEventListener(Event.CONNECT, function (event: *): * { onopen() })
+      addEventListener(Event.CLOSE, function (event: *): * { onclose() })
 
-      addEventListener(
-        ProgressEvent.SOCKET_DATA,
-        function (event: ProgressEvent): void {
-          ondata(readUTFBytes(bytesAvailable))
-        }
-      )
-
-      addEventListener(Event.CLOSE, function (event: Event): void {
-        onclose()
+      addEventListener(ProgressEvent.SOCKET_DATA, function (event: *): * {
+        ondata(readUTFBytes(bytesAvailable))
       })
 
       addEventListener(IOErrorEvent.IO_ERROR, handle_error)
