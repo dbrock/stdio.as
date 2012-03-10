@@ -6,7 +6,7 @@ package stdio {
   public class StdioSparkApplication extends Application {
     override public function initialize(): void {
       // See `spark.components.Application.initialize()`.
-      setup(systemManager.loaderInfo, false, $initialize)
+      setup(systemManager.loaderInfo, this is Interactive, $initialize)
     }
 
     private function $initialize(): void {

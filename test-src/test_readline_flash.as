@@ -1,13 +1,10 @@
 package {
   import stdio.flash.Sprite
   import stdio.process
+  import stdio.Interactive
 
   [SWF(width=0, height=0)]
-  public class test_readline_flash extends Sprite {
-    override protected function get interactive(): Boolean {
-      return true
-    }
-
+  public class test_readline_flash extends Sprite implements Interactive {
     public function main(): void {
       process.prompt = "What’s your name? "
       process.gets(function (name: String): void {

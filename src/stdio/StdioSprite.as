@@ -3,11 +3,7 @@ package stdio {
 
   public class StdioSprite extends Sprite {
     public function StdioSprite() {
-      setup(loaderInfo, interactive, start)
-    }
-
-    protected function get interactive(): Boolean {
-      return false
+      setup(loaderInfo, this is Interactive, start)
     }
 
     private function start(): void {
