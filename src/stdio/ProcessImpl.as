@@ -5,7 +5,7 @@ package stdio {
   import flash.net.*
 
   internal class ProcessImpl implements Process {
-    private const stdin_buffer: StreamBuffer = new StreamBuffer
+    private const buffered_stdin: BufferedStream = new BufferedStream
     private const stdin_socket: SocketStream = new SocketStream
     private const readline_socket: SocketStream = new SocketStream
 
@@ -49,10 +49,10 @@ package stdio {
         }
       }
 
-      stdin_socket.ondata = stdin_buffer.write
-      stdin_socket.onclose = stdin_buffer.close
-      readline_socket.ondata = stdin_buffer.write
-      readline_socket.onclose = stdin_buffer.close
+      stdin_socket.ondata = buffered_stdin.write
+      stdin_socket.onclose = buffered_stdin.close
+      readline_socket.ondata = buffered_stdin.write
+      readline_socket.onclose = buffered_stdin.close
 
       const stdin_port: int = get_int("stdio.in")
       const readline_port: int = get_int("stdio.readline")
@@ -145,7 +145,7 @@ package stdio {
     }
 
     public function get stdin(): InputStream {
-      return stdin_buffer
+      return buffered_stdin
     }
 
     public function get stdout(): OutputStream {
