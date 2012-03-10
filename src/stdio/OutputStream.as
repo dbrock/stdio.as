@@ -1,7 +1,7 @@
 package stdio {
   public interface OutputStream {
-    function puts(value: Object): void
-    function write(value: Object): void
+    function puts(value: *): void
+    function write(value: *): void
     function close(): void
   }
 }

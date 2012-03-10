@@ -3,8 +3,8 @@ package stdio {
     function get env(): Object
     function get argv(): Array
 
-    function puts(value: Object): void
-    function warn(value: Object): void
+    function puts(value: *): void
+    function warn(value: *): void
 
     function gets(callback: Function): void
     function set prompt(value: String): void

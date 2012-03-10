@@ -87,15 +87,15 @@ package stdio {
 
     // -----------------------------------------------------
 
-    public function puts(value: Object): void {
+    public function puts(value: *): void {
       if (interactive) {
-        readline_socket.puts("!" + String(value))
+        readline_socket.puts("!" + value)
       } else {
         stdout.puts(value)
       }
     }
 
-    public function warn(value: Object): void {
+    public function warn(value: *): void {
       stderr.puts(value)
     }
 

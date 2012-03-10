@@ -31,12 +31,12 @@ package stdio {
       throw new Error(event.text)
     }
 
-    public function puts(value: Object): void {
+    public function puts(value: *): void {
       write(value + "\n")
     }
 
-    public function write(value: Object): void {
-      writeUTFBytes(value.toString())
+    public function write(value: *): void {
+      writeUTFBytes(value)
     }
   }
 }

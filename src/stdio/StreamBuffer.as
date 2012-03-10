@@ -15,12 +15,12 @@ package stdio {
       push({ callback: callback, gets: true })
     }
 
-    public function puts(value: Object): void {
+    public function puts(value: *): void {
       write(value + "\n")
     }
 
-    public function write(value: Object): void {
-      buffer += String(value); feed()
+    public function write(value: *): void {
+      buffer += value; feed()
     }
 
     public function close(): void {
