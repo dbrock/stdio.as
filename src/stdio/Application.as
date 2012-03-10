@@ -8,7 +8,7 @@ package stdio {
     override public function initialize(): void {
       const env: Object = systemManager.loaderInfo.parameters
 
-      env["stdio.interactive"] = String(this is REPL)
+      env["stdio.interactive"] = String(this is Interactive)
 
       process = new ProcessImpl(env)
       ProcessImpl(process).initialize(start)

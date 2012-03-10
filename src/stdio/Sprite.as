@@ -6,7 +6,7 @@ package stdio {
     public function Sprite() {
       const env: Object = loaderInfo.parameters
 
-      env["stdio.interactive"] = String(this is REPL)
+      env["stdio.interactive"] = String(this is Interactive)
 
       process = new ProcessImpl(env)
       ProcessImpl(process).initialize(start)
