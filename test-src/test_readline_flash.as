@@ -1,4 +1,5 @@
 package {
+  import stdio.colorize
   import stdio.flash.Sprite
   import stdio.process
   import stdio.Interactive
@@ -9,9 +10,14 @@ package {
       process.prompt = "What’s your name? "
       process.gets(function (name: String): void {
         process.puts("Hello, " + name + "!")
-        process.prompt = "Favorite color? "
+        process.prompt = "What’s your favorite color? "
         process.gets(function (color: String): void {
-          process.puts("I like " + color + " too!")
+          color = color.toLowerCase()
+          process.puts(
+            "I like " + colorize(
+              "%{bold}%{" + color + "}" + color + "%{none}"
+            ) + " too!"
+          )
           process.exit()
         })
       })
