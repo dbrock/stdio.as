@@ -1,5 +1,5 @@
 package {
-  import stdio.IProcess
+  import stdio.Process
 
-  public var process: IProcess
+  public var process: Process
 }

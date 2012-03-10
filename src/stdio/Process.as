@@ -1,5 +1,5 @@
 package stdio {
-  public interface IProcess {
+  public interface Process {
     function get env(): Object
     function get argv(): Array
 

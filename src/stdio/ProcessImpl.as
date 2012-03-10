@@ -4,28 +4,38 @@ package stdio {
   import flash.utils.*
   import flash.net.*
 
-  internal class LocalProcess implements IProcess {
-    private var parameters: Object
-    private var interactive: Boolean
+  internal class ProcessImpl implements Process {
+    private const stdin_buffer: StreamBuffer = new StreamBuffer
+    private const stdin_socket: SocketStream = new SocketStream
+    private const readline_socket: SocketStream = new SocketStream
 
+    private const stdout_socket: SocketStream = new SocketStream
+    private const stderr_socket: SocketStream = new SocketStream
+
+    private var _env: Object
     private var _prompt: String = "> "
 
-    public function LocalProcess(parameters: Object, interactive: Boolean) {
-      this.parameters = parameters
-      this.interactive = interactive
+    public function ProcessImpl(env: Object) {
+      _env = env
     }
 
-    internal function get available(): Boolean {
+    internal function initialize(callback: Function): void {
+      if (available) {
+        connect(callback)
+      } else {
+        callback()
+      }
+    }
+
+    private function get available(): Boolean {
       return !!service_url
     }
 
     private function get service_url(): String {
-      return parameters["stdio.service"]
+      return env["stdio.service"]
     }
 
-    // -----------------------------------------------------
-
-    internal function connect(callback: Function): void {
+    private function connect(callback: Function): void {
       stdin_socket.onopen = onopen
       readline_socket.onopen = onopen
       stdout_socket.onopen = onopen
@@ -60,60 +70,59 @@ package stdio {
       stderr_socket.connect("localhost", stderr_port)
 
       function get_int(name: String): int {
-        return parseInt(parameters[name])
+        return parseInt(env[name])
       }
     }
 
-    private const stdin_buffer: StreamBuffer = new StreamBuffer
-    private const stdin_socket: SocketStream = new SocketStream
-    private const readline_socket: SocketStream = new SocketStream
+    private function get interactive(): Boolean {
+      return env["stdio.interactive"] === "true"
+    }
 
-    private const stdout_socket: SocketStream = new SocketStream
-    private const stderr_socket: SocketStream = new SocketStream
-
-    // -----------------------------------------------------
+    //----------------------------------------------------------------
 
     public function get env(): Object {
-      return parameters
+      return _env
     }
 
     public function get argv(): Array {
-      return parameters["stdio.argv"].split(" ").map(
+      return env["stdio.argv"].split(" ").map(
         function (argument: String, ...rest: Array): String {
           return decodeURIComponent(argument)
         }
       )
     }
 
-    // -----------------------------------------------------
-
     public function puts(value: *): void {
-      if (interactive) {
-        readline_socket.puts("!" + value)
-      } else {
-        stdout.puts(value)
+      if (available) {
+        if (interactive) {
+          readline_socket.puts("!" + value)
+        } else {
+          stdout.puts(value)
+        }
       }
     }
 
     public function warn(value: *): void {
-      stderr.puts(value)
+      if (available) {
+        stderr.puts(value)
+      }
     }
 
-    // -----------------------------------------------------
-
     public function gets(callback: Function): void {
-      if (interactive) {
-        readline_socket.puts("?" + _prompt)
-      }
+      if (available) {
+        if (interactive) {
+          readline_socket.puts("?" + _prompt)
+        }
 
-      stdin.gets(callback)
+        stdin.gets(callback)
+      } else {
+        callback(null)
+      }
     }
 
     public function set prompt(value: String): void {
       _prompt = value
     }
-
-    // -----------------------------------------------------
 
     public function get stdin(): InputStream {
       return stdin_buffer
@@ -127,15 +136,17 @@ package stdio {
       return stderr_socket
     }
 
-    // -----------------------------------------------------
-
     public function exit(status: int = 0): void {
-      when_ready(function (): void {
-        http_post("/exit", status.toString())
-      })
+      if (available) {
+        when_ready(function (): void {
+          http_post("/exit", status.toString())
+        })
+      } else {
+        throw new Error("cannot exit: process not available")
+      }
     }
 
-    // -----------------------------------------------------
+    //----------------------------------------------------------------
 
     private var n_pending_requests: int = 0
     private var ready_callbacks: Array = []
