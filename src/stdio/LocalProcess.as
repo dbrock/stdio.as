@@ -44,20 +44,20 @@ package stdio {
       readline_socket.ondata = stdin_buffer.write
       readline_socket.onclose = stdin_buffer.close
 
-      const in_port: int = get_int("stdio.in")
+      const stdin_port: int = get_int("stdio.in")
       const readline_port: int = get_int("stdio.readline")
 
       if (interactive) {
         readline_socket.connect("localhost", readline_port)
       } else {
-        stdin_socket.connect("localhost", in_port)
+        stdin_socket.connect("localhost", stdin_port)
       }
 
-      const out_port: int = get_int("stdio.out")
-      const err_port: int = get_int("stdio.err")
+      const stdout_port: int = get_int("stdio.out")
+      const stderr_port: int = get_int("stdio.err")
 
-      stdout_socket.connect("localhost", out_port)
-      stderr_socket.connect("localhost", err_port)
+      stdout_socket.connect("localhost", stdout_port)
+      stderr_socket.connect("localhost", stderr_port)
 
       function get_int(name: String): int {
         return parseInt(parameters[name])

@@ -49,25 +49,28 @@ The global `process` object provides the following operations:
 ## FLASH BOILERPLATE
 
     package {
-      import stdio.flash.Sprite
-      import stdio.process
+      import stdio.Sprite
 
+      [SWF(width=0, height=0)]
       public class hello_world extends Sprite {
-        override public function main(): void {
+        public function main(): void {
           process.puts("Hello, World!")
+          process.exit()
         }
       }
     }
 
+(Since this is a CLI program, we use the `width=0` and `height=0`
+parameters to make the Flash Player GUI window less distracting.)
+
 ## FLEX 4 BOILERPLATE
 
     <stdio:Application
-        xmlns:fx="http://ns.adobe.com/mxml/2009"
-        xmlns:stdio="stdio.spark.*">
+      xmlns:fx="http://ns.adobe.com/mxml/2009"
+      xmlns:stdio="stdio.*" width="0" height="0">
       <stdio:main>
-        import stdio.process
-
-        process.puts("Hello, World!")
+        process.puts('Hello, World!')
+        process.exit()
       </stdio:main>
     </stdio:Application>
 
