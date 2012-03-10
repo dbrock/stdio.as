@@ -1,5 +1,5 @@
 package stdio {
-  internal class BufferedStream implements InputStream, OutputStream {
+  public class BufferedStream implements InputStream, OutputStream {
     public var buffer: String = ""
     public var closed: Boolean = false
 
