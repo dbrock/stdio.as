@@ -4,20 +4,20 @@ build: build-tests
 build-swc:
 	fcshc src -o stdio.swc
 build-tests: build-swc build-interactive-test
-	fcshc stdio.swc test/test.as --no-rsls
+	fcshc stdio.swc test/flash_test.as --no-rsls
 	fcshc stdio.swc test/flex_test.mxml
 build-interactive-test:
 	fcshc stdio.swc test/interactive_test.as --no-rsls
 
 test: build-tests
 	@echo '#'
-	@echo '# Not testing broken Flex implementation.'
-	@echo '#'
 	@echo '# To manually test the readline functionality:'
 	@echo '# make test-interactive'
 	@echo '#'
-	test/test-with-process test.swf
-	test/test-without-process test.swf
+	test/test-with-process flash_test.swf
+	test/test-without-process flash_test.swf
+	test/test-with-process flex_test.swf
+	test/test-without-process flex_test.swf
 test-interactive: build-interactive-test
 	bin/run-swf interactive_test.swf
 

@@ -7,7 +7,7 @@ var port = 53944
 var server = require("http").createServer(pass)
 var child
 
-setTimeout(fail, 5000)
+setTimeout(fail, 20000)
 server.listen(port, function () {
   child = require("child_process").spawn(executable, [swf + "?port=" + port])
 })
