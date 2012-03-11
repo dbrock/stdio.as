@@ -48,6 +48,7 @@ function fatal_error(error) {
 }
 
 var verbose = false
+var disable_stdio = false
 
 function trace() {
   if (verbose) {
@@ -57,17 +58,32 @@ function trace() {
   }
 }
 
-if (process.argv[2] === "--verbose") {
-  verbose = true
-  process.argv.splice(2, 1)
-  trace("verbose mode on")
+while (/^-/.test(process.argv[2])) {
+  var option = process.argv.splice(2, 1)[0]
+
+  if (option === "--verbose") {
+    verbose = true
+  } else if (option === "--no-stdio") {
+    disable_stdio = true
+  } else {
+    console.error("error: unknown option: " + option)
+    die_with_usage()
+  }
+
+  if (verbose) {
+    trace(option)
+  }
 }
 
 if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
 } else {
+  die_with_usage()
+}
+
+function die_with_usage() {
   console.error("\
-Usage: run-swf [--verbose] PROGRAM.swf [ARGUMENTS...]")
+Usage: run-swf [--verbose] [--no-stdio] PROGRAM.swf [ARGUMENTS...]")
   process.exit(1)
 }
 
@@ -90,7 +106,12 @@ function run_swf(filename, argv) {
       })
 
       trace("sending file: %s", filename)
-      trace("waiting for connections...")
+
+      if (disable_stdio) {
+        trace("stdio servers disabled")
+      } else {
+        trace("waiting for stdio connections...")
+      }
 
       swf_file.pipe(response)
       swf_file.resume()
@@ -117,20 +138,28 @@ function run_swf(filename, argv) {
       })
     }
   }, function (http_port) {
-    open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
-      open_readline_server(function (readline_port) {
-        var url = "http://localhost:" + http_port
+    var url = "http://localhost:" + http_port
 
-        process.env["stdio.service"] = url
-        process.env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
-        process.env["stdio.in"] = stdin_port
-        process.env["stdio.out"] = stdout_port
-        process.env["stdio.err"] = stderr_port
-        process.env["stdio.readline"] = readline_port
+    process.env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
 
-        run_flashplayer(url, process.env)
+    if (disable_stdio) {
+      proceed()
+    } else {
+      open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
+        open_readline_server(function (readline_port) {
+          process.env["stdio.service"] = url
+          process.env["stdio.in"] = stdin_port
+          process.env["stdio.out"] = stdout_port
+          process.env["stdio.err"] = stderr_port
+          process.env["stdio.readline"] = readline_port
+          proceed()
+        })
       })
-    })
+    }
+
+    function proceed() {
+      run_flashplayer(url, process.env)
+    }
   })
 }
 

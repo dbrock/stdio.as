@@ -1,0 +1,8 @@
+#!/bin/bash
+
+errfile=`mktemp -t stdio.as`; trap 'rm -f "$errfile"' EXIT
+
+out=$(foo=FOO bin/run-swf "$1" 123 <<<BAR 2>"$errfile"); code=$?
+
+result=$(diff <(echo FOO 123 BAR) <(echo `cat $errfile` $code $out)) &&
+echo ok - $1 || { echo not ok - $1; sed 's/^/# /' <<< "$result"; }

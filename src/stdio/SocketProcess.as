@@ -4,7 +4,7 @@ package stdio {
   import flash.utils.*
   import flash.net.*
 
-  public class SocketProcess implements Process {
+  internal class SocketProcess implements Process {
     private const buffered_stdin: BufferedStream = new BufferedStream
     private const stdin_socket: SocketStream = new SocketStream
     private const readline_socket: SocketStream = new SocketStream
@@ -19,7 +19,7 @@ package stdio {
       _env = env
     }
 
-    internal function initialize(callback: Function): void {
+    public function initialize(callback: Function): void {
       if (available) {
         connect(callback)
       } else {
@@ -27,7 +27,7 @@ package stdio {
       }
     }
 
-    private function get available(): Boolean {
+    public function get available(): Boolean {
       return !!service_url
     }
 
@@ -156,6 +156,20 @@ package stdio {
       return stderr_socket
     }
 
+    public function handle(error: *): void {
+      if (error is UncaughtErrorEvent) {
+        UncaughtErrorEvent(error).preventDefault()
+        handle(UncaughtErrorEvent(error).error)
+      } else if (error is Error) {
+        // Important: Avoid the `Error(x)` casting syntax.
+        http_post("/error", (error as Error).getStackTrace())
+      } else if (error is ErrorEvent) {
+        http_post("/async-error", (error as ErrorEvent).toString())
+      } else {
+        http_post("/error", String(error))
+      }
+    }
+
     public function exit(status: int = 0): void {
       if (available) {
         when_ready(function (): void {
@@ -185,20 +199,6 @@ package stdio {
       }
 
       ready_callbacks = []
-    }
-
-    internal function handle_uncaught_error(error: *): void {
-      if (error is UncaughtErrorEvent) {
-        UncaughtErrorEvent(error).preventDefault()
-        handle_uncaught_error(UncaughtErrorEvent(error).error)
-      } else if (error is Error) {
-        // Important: Avoid the `Error(x)` casting syntax.
-        http_post("/error", (error as Error).getStackTrace())
-      } else if (error is ErrorEvent) {
-        http_post("/async-error", (error as ErrorEvent).toString())
-      } else {
-        // XXX: Anybody care about this case?
-      }
     }
 
     private function http_post(path: String, content: String): void {

@@ -8,14 +8,13 @@ package stdio {
 
       env["stdio.interactive"] = String(this is Interactive)
 
-      process = new SocketProcess(env)
-      SocketProcess(process).initialize(start)
+      process = new StandardProcess(env)
+      process.initialize(start)
     }
 
     private function start(): void {
       loaderInfo.uncaughtErrorEvents.addEventListener(
-        UncaughtErrorEvent.UNCAUGHT_ERROR,
-        SocketProcess(process).handle_uncaught_error
+        UncaughtErrorEvent.UNCAUGHT_ERROR, process.handle
       )
 
       if ("main" in this && this["main"].length === 0) {

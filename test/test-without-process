@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+var swf = process.argv[2]
+var executable = "/Applications/Flash Player Debugger.app/Contents/MacOS/Flash Player Debugger"
+var port = 53944
+
+var server = require("http").createServer(pass)
+var child
+
+setTimeout(fail, 5000)
+server.listen(port, function () {
+  child = require("child_process").spawn(executable, [swf + "?port=" + port])
+})
+
+function pass() {
+  console.log("ok - " + swf)
+  process.exit(0)
+}
+
+function fail() {
+  console.log("not ok - " + swf)
+  console.log("# timeout")
+  process.exit(-1)
+}
+
+process.on("exit", function () {
+  if (server) {
+    server.close()
+  }
+
+  if (child) {
+    child.kill("SIGKILL")
+  }
+})

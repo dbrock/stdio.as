@@ -3,6 +3,9 @@ package stdio {
     function get env(): Object
     function get argv(): Array
 
+    function initialize(callback: Function): void
+    function get available(): Boolean
+
     function puts(value: *): void
     function warn(value: *): void
 
@@ -16,5 +19,7 @@ package stdio {
     function get stderr(): OutputStream
 
     function exit(status: int = 0): void
+
+    function handle(error: *): void
   }
 }
