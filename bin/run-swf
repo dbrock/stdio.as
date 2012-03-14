@@ -104,9 +104,10 @@ function run_swf(filename, argv) {
       response.writeHead(404)
       response.end()
     },
+
     "GET /": function (request, response) {
       response.writeHead(200, {
-        "content-type": "application/x-shockwave-flash"
+        "Content-Type": "application/x-shockwave-flash"
       })
 
       trace("sending file: %s", filename)
@@ -120,6 +121,39 @@ function run_swf(filename, argv) {
       swf_file.pipe(response)
       swf_file.resume()
     },
+
+    "POST /shell": function (request, response, errback) {
+      slurp(request, function (command) {
+        trace("shell command: %s", command)
+        ChildProcess.exec(command, function (error, stdout, stderr) {
+          var status = error === null ? 0 : error.code
+
+          trace("shell command result: %j", [status, stdout, stderr])
+
+          response.writeHead(200, { "Content-Type": "text/xml" })
+          response.write(fmt('<result status="%s">\n', status))
+          response.write(fmt('  <stdout>%s</stdout>\n', xml_escape(stdout)))
+          response.write(fmt('  <stderr>%s</stderr>\n', xml_escape(stderr)))
+          response.write(fmt('</result>\n'))
+          response.end()
+        })
+      })
+    },
+
+    "POST /error": function (request, response, errback) {
+      slurp(request, function (data) {
+        dump_runtime_error(data)
+        response.end()
+      })
+    },
+
+    "POST /async-error": function (request, response, errback) {
+      slurp(request, function (data) {
+        dump_async_runtime_error(data)
+        response.end()
+      })
+    },
+
     "POST /exit": function (request, response, errback) {
       slurp(request, function (data) {
         if (data.match(/^-?\d+$/)) {
@@ -127,18 +161,6 @@ function run_swf(filename, argv) {
         } else {
           errback("Bad exit status: " + data)
         }
-      })
-    },
-    "POST /error": function (request, response, errback) {
-      slurp(request, function (data) {
-        dump_runtime_error(data)
-        response.end()
-      })
-    },
-    "POST /async-error": function (request, response, errback) {
-      slurp(request, function (data) {
-        dump_async_runtime_error(data)
-        response.end()
       })
     }
   }, function (http_port) {
@@ -168,6 +190,15 @@ function run_swf(filename, argv) {
       run_flashplayer(url, env)
     }
   })
+}
+
+function xml_escape(string) {
+  return string
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
 }
 
 function open_readline_server(callback) {

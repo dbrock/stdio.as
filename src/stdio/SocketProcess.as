@@ -170,6 +170,34 @@ package stdio {
       }
     }
 
+    private function shell_quote(word: String): String {
+      return "'" + word.replace(/'/g, "'\"'\"") + "'"
+    }
+
+    public function shell(command: *, callback: Function): void {
+      if (available) {
+        if (command is Array) {
+          command = command.map(
+            function (word: String, ...rest: Array): String {
+              return shell_quote(word)
+            }
+          ).join(" ")
+        }
+
+        http_post("/shell", command, function (data: String): void {
+          const result: XML = new XML(data)
+
+          callback(
+            Number(result.@status),
+            String(result.stdout.text()),
+            String(result.stderr.text())
+          )
+        })
+      } else {
+        throw new Error("cannot execute shell command: process not available")
+      }
+    }
+
     public function exit(status: int = 0): void {
       if (available) {
         when_ready(function (): void {
@@ -201,7 +229,9 @@ package stdio {
       ready_callbacks = []
     }
 
-    private function http_post(path: String, content: String): void {
+    private function http_post(
+      path: String, content: String, callback: Function = null
+    ): void {
       const request: URLRequest = new URLRequest(service_url + path)
 
       request.method = "POST"
@@ -214,6 +244,10 @@ package stdio {
       loader.addEventListener(
         Event.COMPLETE,
         function (event: Event): void {
+          if (callback !== null) {
+            callback(loader.data)
+          }
+
           if (--n_pending_requests === 0) {
             handle_ready()
           }
