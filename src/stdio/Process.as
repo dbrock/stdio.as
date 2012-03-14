@@ -9,10 +9,10 @@ package stdio {
     function puts(value: *): void
     function warn(value: *): void
 
+    function style(styles: String, string: String): String
+
     function gets(callback: Function): void
     function set prompt(value: String): void
-
-    function format(pattern: String): String
 
     function get stdin(): InputStream
     function get stdout(): OutputStream

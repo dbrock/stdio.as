@@ -108,6 +108,32 @@ package stdio {
       }
     }
 
+    public function style(styles: String, string: String): String {
+      const codes: Object = {
+        none: 0, bold: 1, italic: 3, underline: 4, inverse: 7,
+        black: 30, red: 31, green: 32, yellow: 33, blue: 34,
+        magenta: 35, cyan: 36, white: 37, gray: 90, grey: 90
+      }
+
+      if (styles === "") {
+        return string
+      } else {
+        return styles.split(/\s+/).map(
+          function (style: String, ...rest: Array): String {
+            if (style in codes) {
+              return escape_sequence(codes[style])
+            } else {
+              throw new Error("style not supported: " + style)
+            }
+          }
+        ).join("") + string + escape_sequence(0)
+      }
+
+      function escape_sequence(code: int): String {
+        return "\x1b[" + code + "m"
+      }
+    }
+
     public function gets(callback: Function): void {
       if (available) {
         if (interactive) {
@@ -122,26 +148,6 @@ package stdio {
 
     public function set prompt(value: String): void {
       _prompt = value
-    }
-
-    public function format(pattern: String): String {
-      const codes: Object = {
-        none: 0, bold: 1, italic: 3, underline: 4, inverse: 7,
-        black: 30, red: 31, green: 32, yellow: 33, blue: 34,
-        magenta: 35, cyan: 36, white: 37, gray: 90, grey: 90
-      }
-
-      return pattern.replace(/%(?:%|\{([a-z]+)\})/g,
-        function (match: String, name: String, ...rest: Array): String {
-          if (match === "%%") {
-            return "%"
-          } else if (name in codes) {
-            return "\x1b[" + codes[name] + "m"
-          } else {
-            throw new Error("not supported: " + match)
-          }
-        }
-      )
     }
 
     public function get stdin(): InputStream {
