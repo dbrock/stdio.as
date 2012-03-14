@@ -18,7 +18,11 @@ package stdio {
     function get stdout(): OutputStream
     function get stderr(): OutputStream
 
-    function shell(command: *, callback: Function): void
+    function shell(
+      command: *,
+      callback: Function,
+      errback: Function = null
+    ): void
 
     function exit(status: int = 0): void
 

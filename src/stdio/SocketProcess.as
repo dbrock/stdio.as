@@ -177,10 +177,18 @@ package stdio {
     }
 
     private function shell_quote(word: String): String {
-      return "'" + word.replace(/'/g, "'\"'\"") + "'"
+      if (/^[-=.,\w]+$/.test(word)) {
+        return word
+      } else {
+        return "'" + word.replace(/'/g, "'\\''") + "'"
+      }
     }
 
-    public function shell(command: *, callback: Function): void {
+    public function shell(
+      command: *,
+      callback: Function,
+      errback: Function = null
+    ): void {
       if (available) {
         if (command is Array) {
           command = command.map(
@@ -192,15 +200,28 @@ package stdio {
 
         http_post("/shell", command, function (data: String): void {
           const result: XML = new XML(data)
+          const status: int = result.@status
+          const stdout: String = result.stdout.text()
+          const stderr: String = result.stderr.text()
 
-          callback(
-            Number(result.@status),
-            String(result.stdout.text()),
-            String(result.stderr.text())
-          )
+          if (status === 0) {
+            if (callback.length === 1) {
+              callback(stdout)
+            } else {
+              callback(stdout, stderr)
+            }
+          } else if (errback === null) {
+            warn(stderr)
+          } else if (errback.length === 1) {
+            errback(status)
+          } else if (errback.length === 2) {
+            errback(status, stderr)
+          } else {
+            errback(status, stderr, stdout)
+          }
         })
       } else {
-        throw new Error("cannot execute shell command: process not available")
+        throw new Error("cannot execute command: process not available")
       }
     }
 
