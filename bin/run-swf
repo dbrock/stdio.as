@@ -37,23 +37,24 @@ function kill_flashplayer() {
 
 process.on("uncaughtException", function (error) {
   kill_flashplayer()
-  fatal_error("internal error: " + error.stack)
+  die("internal error: " + error.stack)
 })
 
-function fatal_error(error) {
-  var message = error instanceof Error ? error.message : error
+function warn() {
+  console.warn("run-swf: %s", fmt.apply(null, arguments))
+}
 
-  console.error("run-swf: " + message)
+function die(error) {
+  warn("%s", error instanceof Error ? error.message : error)
   process.exit(-1)
 }
 
-var verbose = false
-var disable_stdio = false
+var verbose, no_stdio, no_flashplayer
 
 function trace() {
   if (verbose) {
     fmt.apply(null, arguments).split("\n").forEach(function (line) {
-      console.warn("run-swf: %s", line)
+      warn("%s", line)
     })
   }
 }
@@ -63,15 +64,16 @@ while (/^-/.test(process.argv[2])) {
 
   if (option === "--verbose") {
     verbose = true
+    trace("verbose mode")
   } else if (option === "--no-stdio") {
-    disable_stdio = true
+    no_stdio = true
+    trace("no-stdio mode")
+  } else if (option === "--no-flashplayer") {
+    no_flashplayer = true
+    trace("no-flashplayer mode")
   } else {
     console.error("error: unknown option: " + option)
     die_with_usage()
-  }
-
-  if (verbose) {
-    trace(option)
   }
 }
 
@@ -82,9 +84,7 @@ if (process.argv.length >= 3) {
 }
 
 function die_with_usage() {
-  console.error("\
-Usage: run-swf [--verbose] [--no-stdio] PROGRAM.swf [ARGUMENTS...]")
-  process.exit(1)
+  die("Usage: run-swf [--verbose] [--no-stdio] PROGRAM.swf [ARGUMENTS...]")
 }
 
 function trace_call(name, args) {
@@ -97,9 +97,13 @@ function run_swf(filename, argv) {
   var swf_file = FS.createReadStream(filename)
 
   swf_file.pause()
-  swf_file.on("error", fatal_error)
+  swf_file.on("error", die)
 
   open_http_server({
+    "GET /favicon.ico": function (request, response) {
+      response.writeHead(404)
+      response.end()
+    },
     "GET /": function (request, response) {
       response.writeHead(200, {
         "content-type": "application/x-shockwave-flash"
@@ -107,8 +111,8 @@ function run_swf(filename, argv) {
 
       trace("sending file: %s", filename)
 
-      if (disable_stdio) {
-        trace("stdio servers disabled")
+      if (no_stdio) {
+        trace("stdio disabled")
       } else {
         trace("waiting for stdio connections...")
       }
@@ -139,26 +143,29 @@ function run_swf(filename, argv) {
     }
   }, function (http_port) {
     var url = "http://localhost:" + http_port
+    var env = process.env
 
-    process.env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
+    trace("listening to <%s>", url)
 
-    if (disable_stdio) {
+    env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
+
+    if (no_stdio) {
       proceed()
     } else {
       open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
         open_readline_server(function (readline_port) {
-          process.env["stdio.service"] = url
-          process.env["stdio.in"] = stdin_port
-          process.env["stdio.out"] = stdout_port
-          process.env["stdio.err"] = stderr_port
-          process.env["stdio.readline"] = readline_port
+          env["stdio.service"] = url
+          env["stdio.in"] = stdin_port
+          env["stdio.out"] = stdout_port
+          env["stdio.err"] = stderr_port
+          env["stdio.readline"] = readline_port
           proceed()
         })
       })
     }
 
     function proceed() {
-      run_flashplayer(url, process.env)
+      run_flashplayer(url, env)
     }
   })
 }
@@ -228,7 +235,7 @@ function open_readline_server(callback) {
       }
     })
   }, function (port) {
-    trace("readline server started on port %d", port)
+    trace("listening to TCP %d (readline)", port)
     callback(port)
   })
 }
@@ -303,25 +310,29 @@ function get_pretty_error_message(message) {
 }
 
 function run_flashplayer(swf_url, parameters) {
-  get_flashplayer_program(function (flashplayer_program) {
-    var url = swf_url + "?" + require("querystring").stringify(parameters)
+  var url = swf_url + "?" + require("querystring").stringify(parameters)
 
-    trace("FLASHPLAYER = %s", inspect(flashplayer_program))
-    trace("%s", inspect(parameters))
-    trace("$ flashplayer %s", encodeURI(url))
+  if (no_flashplayer) {
+    console.log("%s", url)
+  } else {
+    get_flashplayer_program(function (flashplayer_program) {
+      trace("FLASHPLAYER = %s", inspect(flashplayer_program))
+      trace("%s", inspect(parameters))
+      trace("flashplayer %s", url)
 
-    flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
+      flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
 
-    flashplayer_process.stderr.on("data", log_flashplayer_output)
-    flashplayer_process.stdout.on("data", log_flashplayer_output)
+      flashplayer_process.stderr.on("data", log_flashplayer_output)
+      flashplayer_process.stdout.on("data", log_flashplayer_output)
 
-    function log_flashplayer_output(data) {
-      console.warn("flashplayer: " + data)
-    }
+      function log_flashplayer_output(data) {
+        console.warn("flashplayer: " + data)
+      }
 
-    flashplayer_process.on("error", fatal_error)
-    flashplayer_process.on("exit", process.exit)
-  })
+      flashplayer_process.on("error", die)
+      flashplayer_process.on("exit", process.exit)
+    })
+  }
 }
 
 function slurp(stream, callback) {
@@ -345,7 +356,7 @@ function open_http_server(routes, callback) {
       }
 
       function fail(message) {
-        fatal_error("HTTP " + action + ": " + message)
+        die("HTTP " + action + ": " + message)
       }
     }),
     callback
@@ -366,8 +377,9 @@ function open_stdio_servers(callback) {
         trace("got stderr connection")
         socket.pipe(process.stderr)
       }, function (stderr_port) {
-        trace("stdio servers started on ports %d, %d, %d",
-              stdin_port, stdout_port, stderr_port)
+        trace("listening to TCP %d (stdin)", stdin_port)
+        trace("listening to TCP %d (stdout)", stdout_port)
+        trace("listening to TCP %d (stderr)", stderr_port)
         callback(stdin_port, stdout_port, stderr_port)
       })
     })
@@ -388,20 +400,25 @@ function get_random_port() {
 }
 
 function bind_server(server, callback) {
+  var port
+
   server.on("error", function (error) {
     if (error.code == "EADDRINUSE") {
-      trace("got EADDRINUSE for %d; trying another port", port)
-      bind_server(server, callback)
+      warn("got EADDRINUSE for %d; trying another port", port)
+      try_random_port()
     } else {
       throw error
     }
   })
 
-  var port = get_random_port()
+  try_random_port()
 
-  server.listen(port, function () {
-    callback(port)
-  })
+  function try_random_port() {
+    port = get_random_port()
+    server.listen(port, function () {
+      callback(port)
+    })
+  }
 }
 
 function get_flashplayer_program(callback) {
@@ -413,7 +430,7 @@ function get_flashplayer_program(callback) {
         callback(program)
       } else {
         if (i + 1 === FLASHPLAYER_PROGRAM_GETTERS.length) {
-          fatal_error("no flashplayer executable found")
+          die("no flashplayer executable found")
         } else {
           loop(i + 1)
         }
