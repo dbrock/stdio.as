@@ -8,6 +8,7 @@ package stdio {
 
     function puts(value: *): void
     function warn(value: *): void
+    function die(value: *): void
 
     function style(styles: String, string: String): String
 

@@ -108,6 +108,14 @@ package stdio {
       }
     }
 
+    public function die(value: *): void {
+      if (available) {
+        warn(value); exit(-1)
+      } else {
+        throw new Error("fatal error: " + String(value))
+      }
+    }
+
     public function style(styles: String, string: String): String {
       const codes: Object = {
         none: 0, bold: 1, italic: 3, underline: 4, inverse: 7,
@@ -166,6 +174,7 @@ package stdio {
       if (error is UncaughtErrorEvent) {
         UncaughtErrorEvent(error).preventDefault()
         handle(UncaughtErrorEvent(error).error)
+        die("run-swf: uncaught error")
       } else if (error is Error) {
         // Important: Avoid the `Error(x)` casting syntax.
         http_post("/error", (error as Error).getStackTrace())
