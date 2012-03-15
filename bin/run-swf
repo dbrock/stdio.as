@@ -40,23 +40,13 @@ process.on("uncaughtException", function (error) {
   die("internal error: " + error.stack)
 })
 
-function warn() {
-  console.warn("run-swf: %s", fmt.apply(null, arguments))
-}
-
-function die(error) {
-  warn("%s", error instanceof Error ? error.message : error)
-  process.exit(-1)
-}
-
+//--------------------------------------------------------------------
+// Command-line options and environment variables
+//--------------------------------------------------------------------
 var verbose, no_stdio, no_flashplayer
 
-function trace() {
-  if (verbose) {
-    fmt.apply(null, arguments).split("\n").forEach(function (line) {
-      warn("%s", line)
-    })
-  }
+if (process.env.STDIO_AS_VERBOSE === "true") {
+  verbose = true
 }
 
 while (/^-/.test(process.argv[2])) {
@@ -64,7 +54,6 @@ while (/^-/.test(process.argv[2])) {
 
   if (option === "--verbose") {
     verbose = true
-    trace("verbose mode")
   } else if (option === "--no-stdio") {
     no_stdio = true
     trace("no-stdio mode")
@@ -72,7 +61,7 @@ while (/^-/.test(process.argv[2])) {
     no_flashplayer = true
     trace("no-flashplayer mode")
   } else {
-    console.error("error: unknown option: " + option)
+    warn("error: unknown option: " + option)
     die_with_usage()
   }
 }
@@ -83,16 +72,29 @@ if (process.argv.length >= 3) {
   die_with_usage()
 }
 
+//--------------------------------------------------------------------
+function trace() {
+  if (verbose) {
+    fmt.apply(null, arguments).split("\n").forEach(function (line) {
+      warn("%s", line)
+    })
+  }
+}
+
+function warn() {
+  console.warn("run-swf: %s", fmt.apply(null, arguments))
+}
+
+function die(error) {
+  warn("%s", error instanceof Error ? error.message : error)
+  process.exit(-1)
+}
+
 function die_with_usage() {
   die("Usage: run-swf [--verbose] [--no-stdio] PROGRAM.swf [ARGUMENTS...]")
 }
 
-function trace_call(name, args) {
-  trace("%s(%s)", name, [].slice.call(args).map(function (arg) {
-    return inspect(arg)
-  }).join(", "))
-}
-
+//--------------------------------------------------------------------
 function run_swf(filename, argv) {
   var swf_file = FS.createReadStream(filename)
 
@@ -348,7 +350,6 @@ function run_flashplayer(swf_url, parameters) {
   } else {
     get_flashplayer_program(function (flashplayer_program) {
       trace("FLASHPLAYER = %s", inspect(flashplayer_program))
-      trace("%s", inspect(parameters))
       trace("flashplayer %s", url)
 
       flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
@@ -446,6 +447,7 @@ function bind_server(server, callback) {
 
   function try_random_port() {
     port = get_random_port()
+    trace("listening to port " + port + "...")
     server.listen(port, function () {
       callback(port)
     })
