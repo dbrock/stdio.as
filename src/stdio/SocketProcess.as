@@ -179,7 +179,7 @@ package stdio {
         // Important: Avoid the `Error(x)` casting syntax.
         http_post("/error", (error as Error).getStackTrace())
       } else if (error is ErrorEvent) {
-        http_post("/async-error", (error as ErrorEvent).toString())
+        http_post("/error", (error as ErrorEvent).text)
       } else {
         http_post("/error", String(error))
       }

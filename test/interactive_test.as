@@ -10,8 +10,8 @@ package {
         process.prompt = "What’s your favorite color? "
         process.gets(function (color: String): void {
           process.puts(
-            "I like " + process.format(
-              "%{bold}%{" + color.toLowerCase() + "}" + color + "%{none}"
+            "I like " + process.style(
+              "bold " + color.toLowerCase(), color
             ) + " too!"
           )
           process.exit()

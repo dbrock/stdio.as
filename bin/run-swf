@@ -6,39 +6,29 @@ var FS = require("fs")
 var HTTP = require("http")
 var Net = require("net")
 var Path = require("path")
+var QueryString = require("querystring")
+var Readline = require("readline")
 var URL = require("url")
+
 var inspect = require("util").inspect
 var fmt = require("util").format
 
-var FLASHPLAYER_PROGRAM_GETTERS = [
-  get_FLASHPLAYER_program,
-  get_osx_flash_player_debugger_app_program,
-  get_osx_flash_player_app_program
-]
-
-process.stdin.pause()
-
-process.on("SIGINT", function () {
-  process.stderr.write("\n")
-  process.exit(1)
-})
-
-process.on("exit", function () {
-  kill_flashplayer()
-})
-
-var flashplayer_process
-
-function kill_flashplayer() {
-  if (flashplayer_process) {
-    flashplayer_process.kill("SIGKILL")
+function trace() {
+  if (verbose) {
+    fmt.apply(null, arguments).split("\n").forEach(function (line) {
+      warn("%s", line)
+    })
   }
 }
 
-process.on("uncaughtException", function (error) {
-  kill_flashplayer()
-  die("internal error: " + error.stack)
-})
+function warn() {
+  console.warn("run-swf: %s", fmt.apply(null, arguments))
+}
+
+function die(error) {
+  warn.apply(null, arguments)
+  process.exit(-1)
+}
 
 //--------------------------------------------------------------------
 // Command-line options and environment variables
@@ -66,6 +56,33 @@ while (/^-/.test(process.argv[2])) {
   }
 }
 
+function die_with_usage() {
+  die("Usage: run-swf [--verbose] [--no-stdio] PROGRAM.swf [ARGUMENTS...]")
+}
+
+//--------------------------------------------------------------------
+// Low-level entry-point
+//--------------------------------------------------------------------
+var flashplayer_process
+
+// Pause standard input until we’re connected to the Flash process.
+process.stdin.pause()
+
+process.on("SIGINT", function () {
+  process.stderr.write("\n")
+  process.exit(1)
+})
+
+process.on("exit", function () {
+  if (flashplayer_process) {
+    flashplayer_process.kill("SIGKILL")
+  }
+})
+
+process.on("uncaughtException", function (error) {
+  die("internal error: %s", error.stack)
+})
+
 if (process.argv.length >= 3) {
   run_swf(process.argv[2], process.argv.slice(3))
 } else {
@@ -73,35 +90,130 @@ if (process.argv.length >= 3) {
 }
 
 //--------------------------------------------------------------------
-function trace() {
-  if (verbose) {
-    fmt.apply(null, arguments).split("\n").forEach(function (line) {
-      warn("%s", line)
+// Main entry point
+//--------------------------------------------------------------------
+function run_swf(swf_filename, argv) {
+  open_http_server(swf_filename, function (http_port) {
+    var url = fmt("http://localhost:%s", http_port)
+    var env = process.env
+
+    env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
+
+    if (no_stdio) {
+      run_flashplayer(url, env)
+    } else {
+      open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
+        open_readline_server(function (readline_port) {
+          env["stdio.service"] = "http://localhost:" + http_port
+          env["stdio.in"] = stdin_port
+          env["stdio.out"] = stdout_port
+          env["stdio.err"] = stderr_port
+          env["stdio.readline"] = readline_port
+
+          run_flashplayer(url, env)
+        })
+      })
+    }
+  })
+}
+
+function run_flashplayer(swf_url, parameters) {
+  var url = fmt("%s?%s", swf_url, QueryString.stringify(parameters))
+
+  if (no_flashplayer) {
+    console.log("%s", url)
+  } else {
+    get_flashplayer_program(function (flashplayer_program) {
+      trace("using Flash Player %s", inspect(flashplayer_program))
+      trace("flashplayer %s", url)
+
+      flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
+
+      flashplayer_process.stderr.on("data", log_flashplayer_output)
+      flashplayer_process.stdout.on("data", log_flashplayer_output)
+
+      function log_flashplayer_output(data) {
+        console.warn("flashplayer: " + data)
+      }
+
+      flashplayer_process.on("error", function (error) {
+        die("%s", error)
+      })
+
+      flashplayer_process.on("exit", function () {
+        process.exit()
+      })
     })
   }
 }
 
-function warn() {
-  console.warn("run-swf: %s", fmt.apply(null, arguments))
+//--------------------------------------------------------------------
+// Error handling
+//--------------------------------------------------------------------
+function dump_runtime_error(data) {
+  var lines = data.split(/\r?\n/)
+  var message = get_pretty_error_message(lines.shift())
+
+  draw_horizontal_rule()
+
+  lines.forEach(function (line, index) {
+    var match = line.match(/([^:\/\[]+)\[(.*):(\d+)\]/)
+
+    if (match) {
+      var method = match[1]
+      var filename = Path.relative(process.cwd(), match[2])
+      var line_number = match[3]
+      var text = index === 0 ? fmt("error: %s ", message) : ""
+      var content = fmt("%s:%s: %s", filename, line_number, text)
+      var suffix = fmt(" in %s", method)
+      var pad_length = Math.max(0, 80 - content.length - suffix.length)
+      var padding = repeat(" ", pad_length)
+
+      console.warn(content + padding + suffix)
+    } else {
+      if (index === 0) {
+        console.warn("error: %s", message)
+      }
+
+      console.warn(line)
+    }
+  })
+
+  function repeat(string, n) {
+    return new Array(n + 1).join(string)
+  }
+
+  function draw_horizontal_rule() {
+    console.warn(repeat("\u2014", 80))
+  }
 }
 
-function die(error) {
-  warn("%s", error instanceof Error ? error.message : error)
-  process.exit(-1)
-}
+function get_pretty_error_message(message) {
+  var match
 
-function die_with_usage() {
-  die("Usage: run-swf [--verbose] [--no-stdio] PROGRAM.swf [ARGUMENTS...]")
+  if (message === "TypeError: Error #1009: Cannot access a property or method of a null object reference.") {
+    return "null pointer"
+  } else if ((match = message.match(/^ArgumentError: Error #1063: Argument count mismatch on .*\. Expected (\d+), got (\d+)\.$/))) {
+    return fmt("expected %d arguments, got %d", match[1], match[2])
+  } else if ((match = message.match(/^IOErrorEvent: Error #2032: Stream Error. URL: (.*)$/))) {
+    return inspect(match[1]) + ": URL not available"
+  } else {
+    return message.replace(/^Error: /i, "")
+  }
 }
 
 //--------------------------------------------------------------------
-function run_swf(filename, argv) {
-  var swf_file = FS.createReadStream(filename)
+// HTTP server, stdio servers, readline server
+//--------------------------------------------------------------------
+function open_http_server(swf_filename, callback) {
+  var swf_file = FS.createReadStream(swf_filename)
 
   swf_file.pause()
-  swf_file.on("error", die)
+  swf_file.on("error", function (error) {
+    die("%s", error)
+  })
 
-  open_http_server({
+  var routes = {
     "GET /favicon.ico": function (request, response) {
       response.writeHead(404)
       response.end()
@@ -112,7 +224,7 @@ function run_swf(filename, argv) {
         "Content-Type": "application/x-shockwave-flash"
       })
 
-      trace("sending file: %s", filename)
+      trace("sending file: %s", swf_filename)
 
       if (no_stdio) {
         trace("stdio disabled")
@@ -149,13 +261,6 @@ function run_swf(filename, argv) {
       })
     },
 
-    "POST /async-error": function (request, response, errback) {
-      slurp(request, function (data) {
-        dump_async_runtime_error(data)
-        response.end()
-      })
-    },
-
     "POST /exit": function (request, response, errback) {
       slurp(request, function (data) {
         if (data.match(/^-?\d+$/)) {
@@ -165,42 +270,51 @@ function run_swf(filename, argv) {
         }
       })
     }
-  }, function (http_port) {
-    var url = "http://localhost:" + http_port
-    var env = process.env
+  }
 
-    trace("listening to <%s>", url)
+  bind_server(
+    HTTP.createServer(function (request, response) {
+      var action = request.method + " " + URL.parse(request.url).pathname
 
-    env["stdio.argv"] = argv.map(encodeURIComponent).join(" ")
+      trace("got HTTP " + action)
 
-    if (no_stdio) {
-      proceed()
-    } else {
-      open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
-        open_readline_server(function (readline_port) {
-          env["stdio.service"] = url
-          env["stdio.in"] = stdin_port
-          env["stdio.out"] = stdout_port
-          env["stdio.err"] = stderr_port
-          env["stdio.readline"] = readline_port
-          proceed()
-        })
-      })
+      if (action in routes) {
+        routes[action](request, response, fail)
+      } else {
+        fail("unexpected")
+      }
+
+      function fail(message) {
+        die("HTTP %s: %s", action, + message)
+      }
+    }), function (port) {
+      trace("listening to TCP %d (HTTP)", port)
+      callback(port)
     }
-
-    function proceed() {
-      run_flashplayer(url, env)
-    }
-  })
+  )
 }
 
-function xml_escape(string) {
-  return string
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
+function open_stdio_servers(callback) {
+  open_server(function (socket) {
+    trace("got stdin connection")
+    process.stdin.pipe(socket)
+    process.stdin.resume()
+  }, function (stdin_port) {
+    open_server(function (socket) {
+      trace("got stdout connection")
+      socket.pipe(process.stdout)
+    }, function (stdout_port) {
+      open_server(function (socket) {
+        trace("got stderr connection")
+        socket.pipe(process.stderr)
+      }, function (stderr_port) {
+        trace("listening to TCP %d (stdin)", stdin_port)
+        trace("listening to TCP %d (stdout)", stdout_port)
+        trace("listening to TCP %d (stderr)", stderr_port)
+        callback(stdin_port, stdout_port, stderr_port)
+      })
+    })
+  })
 }
 
 function open_readline_server(callback) {
@@ -209,7 +323,7 @@ function open_readline_server(callback) {
 
     process.stdin.resume()
 
-    var readline = require("readline").createInterface(
+    var readline = Readline.createInterface(
       process.stdin, process.stdout
     ).on("line", function (line) {
       trace("read line: %s", inspect(line))
@@ -273,162 +387,48 @@ function open_readline_server(callback) {
   })
 }
 
-function dump_runtime_error(data) {
-  var lines = data.split(/\r?\n/)
-  var message = get_pretty_error_message(lines.shift())
-
-  draw_horizontal_rule()
-
-  lines.forEach(function (line, index) {
-    var match = line.match(/([^:\/\[]+)\[(.*):(\d+)\]/)
-
-    if (match) {
-      var method = match[1]
-      var filename = Path.relative(process.cwd(), match[2])
-      var line_number = match[3]
-      var text = index === 0 ? fmt("error: %s ", message) : ""
-      var content = fmt("%s:%s: %s", filename, line_number, text)
-      var suffix = fmt(" in %s", method)
-      var pad_length = Math.max(0, 80 - content.length - suffix.length)
-      var padding = repeat(" ", pad_length)
-
-      console.warn(content + padding + suffix)
-    } else {
-      if (index === 0) {
-        console.warn("error: %s", message)
-      }
-
-      console.warn(line)
-    }
-  })
-
-  function repeat(string, n) {
-    return new Array(n + 1).join(string)
-  }
-
-  function draw_horizontal_rule() {
-    console.warn(repeat("\u2014", 80))
-  }
-}
-
-function dump_async_runtime_error(data) {
-  console.warn(
-    "run-swf: error: event: %s",
-    get_pretty_async_error_message(data)
-  )
-}
-
-function get_pretty_async_error_message(data) {
-  var match = data.trim().match(/^\[(\S+).*? text="(.*)"\]$/)
-
-  if (match) {
-    return get_pretty_error_message(fmt("%s: %s", match[1], match[2]))
-  } else {
-    return data
-  }
-}
-
-function get_pretty_error_message(message) {
-  var match
-
-  if (message === "TypeError: Error #1009: Cannot access a property or method of a null object reference.") {
-    return "null pointer"
-  } else if ((match = message.match(/^ArgumentError: Error #1063: Argument count mismatch on .*\. Expected (\d+), got (\d+)\.$/))) {
-    return fmt("expected %d arguments, got %d", match[1], match[2])
-  } else if ((match = message.match(/^IOErrorEvent: Error #2032: Stream Error. URL: (.*)$/))) {
-    return inspect(match[1]) + ": URL not available"
-  } else {
-    return message.replace(/^Error: /i, "")
-  }
-}
-
-function run_flashplayer(swf_url, parameters) {
-  var url = swf_url + "?" + require("querystring").stringify(parameters)
-
-  if (no_flashplayer) {
-    console.log("%s", url)
-  } else {
-    get_flashplayer_program(function (flashplayer_program) {
-      trace("FLASHPLAYER = %s", inspect(flashplayer_program))
-      trace("flashplayer %s", url)
-
-      flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
-
-      flashplayer_process.stderr.on("data", log_flashplayer_output)
-      flashplayer_process.stdout.on("data", log_flashplayer_output)
-
-      function log_flashplayer_output(data) {
-        console.warn("flashplayer: " + data)
-      }
-
-      flashplayer_process.on("error", die)
-      flashplayer_process.on("exit", process.exit)
-    })
-  }
-}
-
-function slurp(stream, callback) {
-  var result = ""
-
-  stream.on("data", function (data) { result += data })
-  stream.on("end", function () { callback(result) })
-}
-
-function open_http_server(routes, callback) {
-  bind_server(
-    HTTP.createServer(function (request, response) {
-      var action = request.method + " " + URL.parse(request.url).pathname
-
-      trace("got HTTP " + action)
-
-      if (action in routes) {
-        routes[action](request, response, fail)
+//--------------------------------------------------------------------
+// Locating the Flash Player executable
+//--------------------------------------------------------------------
+function get_flashplayer_program(callback) {
+  try_in_order([
+    function (callback) {
+      if (process.env.FLASHPLAYER) {
+        get_program(process.env.FLASHPLAYER, callback)
       } else {
-        fail("unexpected")
+        callback(null)
       }
+    },
+    function (callback) {
+      get_osx_app_program("Flash Player Debugger", callback)
+    },
+    function (callback) {
+      get_osx_app_program("Flash Player", callback)
+    },
+    function (callback) {
+      die("no flashplayer executable found")
+    }
+  ], callback)
 
-      function fail(message) {
-        die("HTTP " + action + ": " + message)
-      }
-    }),
-    callback
-  )
-}
+  function get_osx_app_program(name, callback) {
+    get_program(
+      "/Applications/" + name + ".app/Contents/MacOS/" + name,
+      callback
+    )
+  }
 
-function open_stdio_servers(callback) {
-  open_server(function (socket) {
-    trace("got stdin connection")
-    process.stdin.pipe(socket)
-    process.stdin.resume()
-  }, function (stdin_port) {
-    open_server(function (socket) {
-      trace("got stdout connection")
-      socket.pipe(process.stdout)
-    }, function (stdout_port) {
-      open_server(function (socket) {
-        trace("got stderr connection")
-        socket.pipe(process.stderr)
-      }, function (stderr_port) {
-        trace("listening to TCP %d (stdin)", stdin_port)
-        trace("listening to TCP %d (stdout)", stdout_port)
-        trace("listening to TCP %d (stderr)", stderr_port)
-        callback(stdin_port, stdout_port, stderr_port)
-      })
+  function get_program(filename, callback) {
+    Path.exists(filename, function (exists) {
+      callback(exists ? filename : null)
     })
-  })
+  }
 }
 
+//--------------------------------------------------------------------
+// TCP server utility functions
+//--------------------------------------------------------------------
 function open_server(handler, callback) {
   return bind_server(Net.createServer(handler), callback)
-}
-
-function get_random_integer(min, max) {
-  return min + Math.floor(Math.random() * (max - min))
-}
-
-function get_random_port() {
-  // Standard IANA dynamic port range.
-  return get_random_integer(0xc000, 0x10000)
 }
 
 function bind_server(server, callback) {
@@ -448,55 +448,62 @@ function bind_server(server, callback) {
   function try_random_port() {
     port = get_random_port()
     trace("listening to port " + port + "...")
+
     server.listen(port, function () {
       callback(port)
     })
-  }
-}
 
-function get_flashplayer_program(callback) {
-  loop(0)
+    function get_random_port() {
+      // Standard IANA dynamic port range.
+      return get_random_integer(0xc000, 0x10000)
 
-  function loop(i) {
-    FLASHPLAYER_PROGRAM_GETTERS[i](function (program) {
-      if (program) {
-        callback(program)
-      } else {
-        if (i + 1 === FLASHPLAYER_PROGRAM_GETTERS.length) {
-          die("no flashplayer executable found")
-        } else {
-          loop(i + 1)
-        }
+      function get_random_integer(min, max) {
+        return min + Math.floor(Math.random() * (max - min))
       }
-    })
+    }
   }
 }
 
-function get_osx_flash_player_debugger_app_program(callback) {
-  get_osx_app_program("Flash Player Debugger", callback)
+//--------------------------------------------------------------------
+// Miscellanous utility functions
+//--------------------------------------------------------------------
+function block(callback) {
+  callback()
 }
 
-function get_osx_flash_player_app_program(callback) {
-  get_osx_app_program("Flash Player", callback)
+function loop(loop) {
+  loop(loop)
 }
 
-function get_osx_app_program(name, callback) {
-  get_program(
-    "/Applications/" + name + ".app/Contents/MacOS/" + name,
-    callback
-  )
+function slurp(stream, callback) {
+  var result = ""
+
+  stream.on("data", function (data) { result += data })
+  stream.on("end", function () { callback(result) })
 }
 
-function get_FLASHPLAYER_program(callback) {
-  if (process.env.FLASHPLAYER) {
-    get_program(process.env.FLASHPLAYER, callback)
-  } else {
-    callback(null)
-  }
-}
-
-function get_program(filename, callback) {
-  Path.exists(filename, function (exists) {
-    callback(exists ? filename : null)
+function try_in_order(functions, callback) {
+  functions = [].slice.call(functions)
+  loop(function (loop) {
+    if (functions.length === 0) {
+      callback(null)
+    } else {
+      functions.shift()(function (program) {
+        if (program) {
+          callback(program)
+        } else {
+          loop()
+        }
+      })
+    }
   })
+}
+
+function xml_escape(string) {
+  return string
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
 }

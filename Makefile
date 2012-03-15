@@ -4,7 +4,7 @@ build: build-tests
 build-swc:
 	fcshc src -o stdio.swc
 build-tests: build-swc build-interactive-test
-	fcshc stdio.swc test/flash_test.as --no-rsls
+	fcshc -o tmp/flash_test.swf stdio.swc test/flash_test.as --no-rsls
 	fcshc stdio.swc test/flex_test.mxml
 build-interactive-test:
 	fcshc stdio.swc test/interactive_test.as --no-rsls
