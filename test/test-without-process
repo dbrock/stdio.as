@@ -1,24 +1,27 @@
 #!/usr/bin/env node
+// -*- javascript -*-
 
 var swf = process.argv[2]
 var executable = "/Applications/Flash Player Debugger.app/Contents/MacOS/Flash Player Debugger"
-var port = 53944
 
-var server = require("http").createServer(pass)
 var child
+var server = require("http").createServer(pass)
 
-setTimeout(fail, 20000)
-server.listen(port, function () {
-  child = require("child_process").spawn(executable, [swf + "?port=" + port])
+require("../bind-to-random-port.js")(server, function (port) {
+  child = require("child_process").spawn(
+    executable, [swf + "?foo=" + port]
+  )
 })
 
+setTimeout(fail, 10000)
+
 function pass() {
-  console.log("ok - " + swf)
+  console.log("ok - " + swf + " without process")
   process.exit(0)
 }
 
 function fail() {
-  console.log("not ok - " + swf)
+  console.log("not ok - " + swf + " without process")
   console.log("# timeout")
   process.exit(-1)
 }

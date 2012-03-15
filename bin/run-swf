@@ -13,6 +13,9 @@ var URL = require("url")
 var inspect = require("util").inspect
 var fmt = require("util").format
 
+var bind_to_random_port = require("../bind-to-random-port.js")
+var get_flashplayer_program = require("../get-flashplayer-program.js")
+
 function trace() {
   if (verbose) {
     fmt.apply(null, arguments).split("\n").forEach(function (line) {
@@ -63,7 +66,8 @@ function die_with_usage() {
 //--------------------------------------------------------------------
 // Low-level entry-point
 //--------------------------------------------------------------------
-var flashplayer_process
+var flashplayer_process, http_server
+var stdio_sockets = []
 
 // Pause standard input until we’re connected to the Flash process.
 process.stdin.pause()
@@ -93,7 +97,7 @@ if (process.argv.length >= 3) {
 // Main entry point
 //--------------------------------------------------------------------
 function run_swf(swf_filename, argv) {
-  open_http_server(swf_filename, function (http_port) {
+  http_server = open_http_server(swf_filename, function (http_port) {
     var url = fmt("http://localhost:%s", http_port)
     var env = process.env
 
@@ -124,7 +128,7 @@ function run_flashplayer(swf_url, parameters) {
     console.log("%s", url)
   } else {
     get_flashplayer_program(function (flashplayer_program) {
-      trace("using Flash Player %s", inspect(flashplayer_program))
+      trace("using %s as Flash Player", inspect(flashplayer_program))
       trace("flashplayer %s", url)
 
       flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
@@ -272,39 +276,43 @@ function open_http_server(swf_filename, callback) {
     }
   }
 
-  bind_server(
-    HTTP.createServer(function (request, response) {
-      var action = request.method + " " + URL.parse(request.url).pathname
+  var server = HTTP.createServer(function (request, response) {
+    var action = request.method + " " + URL.parse(request.url).pathname
 
-      trace("got HTTP " + action)
+    trace("got HTTP " + action)
 
-      if (action in routes) {
-        routes[action](request, response, fail)
-      } else {
-        fail("unexpected")
-      }
-
-      function fail(message) {
-        die("HTTP %s: %s", action, + message)
-      }
-    }), function (port) {
-      trace("listening to TCP %d (HTTP)", port)
-      callback(port)
+    if (action in routes) {
+      routes[action](request, response, fail)
+    } else {
+      fail("unexpected")
     }
-  )
+
+    function fail(message) {
+      die("HTTP %s: %s", action, + message)
+    }
+  })
+
+  bind_to_random_port(server, function (port) {
+    trace("listening to TCP %d (HTTP server)", port)
+    callback(port)
+  })
+
+  return server
 }
 
 function open_stdio_servers(callback) {
-  open_server(function (socket) {
+  open_one_off_server(function (socket) {
     trace("got stdin connection")
     process.stdin.pipe(socket)
     process.stdin.resume()
   }, function (stdin_port) {
-    open_server(function (socket) {
+    open_one_off_server(function (socket) {
+      stdio_sockets.push(socket)
       trace("got stdout connection")
       socket.pipe(process.stdout)
     }, function (stdout_port) {
-      open_server(function (socket) {
+      open_one_off_server(function (socket) {
+        stdio_sockets.push(socket)
         trace("got stderr connection")
         socket.pipe(process.stderr)
       }, function (stderr_port) {
@@ -318,10 +326,8 @@ function open_stdio_servers(callback) {
 }
 
 function open_readline_server(callback) {
-  open_server(function (socket) {
+  open_one_off_server(function (socket) {
     trace("got readline connection")
-
-    process.stdin.resume()
 
     var readline = Readline.createInterface(
       process.stdin, process.stdout
@@ -333,6 +339,8 @@ function open_readline_server(callback) {
       trace("readline: close")
       socket.end()
     })
+
+    process.stdin.resume()
 
     var n_prompts = 0
     var lines = []
@@ -388,91 +396,15 @@ function open_readline_server(callback) {
 }
 
 //--------------------------------------------------------------------
-// Locating the Flash Player executable
+// Utility functions
 //--------------------------------------------------------------------
-function get_flashplayer_program(callback) {
-  try_in_order([
-    function (callback) {
-      if (process.env.FLASHPLAYER) {
-        get_program(process.env.FLASHPLAYER, callback)
-      } else {
-        callback(null)
-      }
-    },
-    function (callback) {
-      get_osx_app_program("Flash Player Debugger", callback)
-    },
-    function (callback) {
-      get_osx_app_program("Flash Player", callback)
-    },
-    function (callback) {
-      die("no flashplayer executable found")
-    }
-  ], callback)
-
-  function get_osx_app_program(name, callback) {
-    get_program(
-      "/Applications/" + name + ".app/Contents/MacOS/" + name,
-      callback
-    )
-  }
-
-  function get_program(filename, callback) {
-    Path.exists(filename, function (exists) {
-      callback(exists ? filename : null)
-    })
-  }
-}
-
-//--------------------------------------------------------------------
-// TCP server utility functions
-//--------------------------------------------------------------------
-function open_server(handler, callback) {
-  return bind_server(Net.createServer(handler), callback)
-}
-
-function bind_server(server, callback) {
-  var port
-
-  server.on("error", function (error) {
-    if (error.code == "EADDRINUSE") {
-      warn("got EADDRINUSE for %d; trying another port", port)
-      try_random_port()
-    } else {
-      throw error
-    }
+function open_one_off_server(handler, callback) {
+  var server = Net.createServer(function (socket) {
+    server.close()
+    handler(socket)
   })
 
-  try_random_port()
-
-  function try_random_port() {
-    port = get_random_port()
-    trace("listening to port " + port + "...")
-
-    server.listen(port, function () {
-      callback(port)
-    })
-
-    function get_random_port() {
-      // Standard IANA dynamic port range.
-      return get_random_integer(0xc000, 0x10000)
-
-      function get_random_integer(min, max) {
-        return min + Math.floor(Math.random() * (max - min))
-      }
-    }
-  }
-}
-
-//--------------------------------------------------------------------
-// Miscellanous utility functions
-//--------------------------------------------------------------------
-function block(callback) {
-  callback()
-}
-
-function loop(loop) {
-  loop(loop)
+  return bind_to_random_port(server, callback)
 }
 
 function slurp(stream, callback) {
@@ -480,23 +412,6 @@ function slurp(stream, callback) {
 
   stream.on("data", function (data) { result += data })
   stream.on("end", function () { callback(result) })
-}
-
-function try_in_order(functions, callback) {
-  functions = [].slice.call(functions)
-  loop(function (loop) {
-    if (functions.length === 0) {
-      callback(null)
-    } else {
-      functions.shift()(function (program) {
-        if (program) {
-          callback(program)
-        } else {
-          loop()
-        }
-      })
-    }
-  })
 }
 
 function xml_escape(string) {

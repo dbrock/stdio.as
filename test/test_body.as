@@ -10,7 +10,7 @@ package {
       })
     } else {
       new URLLoader().load(new URLRequest(
-        "http://localhost:" + process.env.port
+        "http://localhost:" + process.env.foo
       ))
     }
   }

@@ -13,14 +13,14 @@ build-interactive-test:
 	  tmp/stdio.swc test/interactive_test.as --no-rsls
 
 test: build-tests
-	@echo '#'
-	@echo '# To manually test the readline functionality:'
-	@echo '# make test-interactive'
-	@echo '#'
 	test/test-with-process tmp/flash_test.swf
 	test/test-without-process tmp/flash_test.swf
 	test/test-with-process tmp/flex_test.swf
 	test/test-without-process tmp/flex_test.swf
+	@echo '#'
+	@echo '# To manually test the readline functionality:'
+	@echo '# make test-interactive'
+	@echo '#'
 test-interactive: build-interactive-test
 	bin/run-swf tmp/interactive_test.swf
 
