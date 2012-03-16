@@ -8,6 +8,7 @@ var Net = require("net")
 var Path = require("path")
 var QueryString = require("querystring")
 var Readline = require("readline")
+var TTY = require("tty")
 var URL = require("url")
 
 var inspect = require("util").inspect
@@ -38,7 +39,7 @@ function die(error) {
 //--------------------------------------------------------------------
 var verbose, no_stdio, no_flashplayer
 
-if (process.env.STDIO_AS_VERBOSE === "true") {
+if (process.env.RUN_SWF_VERBOSE === "true") {
   verbose = true
 }
 
@@ -108,11 +109,13 @@ function run_swf(swf_filename, argv) {
     } else {
       open_stdio_servers(function (stdin_port, stdout_port, stderr_port) {
         open_readline_server(function (readline_port) {
-          env["stdio.service"] = "http://localhost:" + http_port
+          env["stdio.enabled"] = true
+          env["stdio.http"] = "http://localhost:" + http_port
           env["stdio.in"] = stdin_port
           env["stdio.out"] = stdout_port
           env["stdio.err"] = stderr_port
           env["stdio.readline"] = readline_port
+          env["stdio.interactive"] = String(TTY.isatty(process.stdin))
 
           run_flashplayer(url, env)
         })

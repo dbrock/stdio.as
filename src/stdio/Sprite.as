@@ -1,29 +1,19 @@
 package stdio {
-  import flash.display.Sprite
-  import flash.events.UncaughtErrorEvent
+  import flash.display.*
   import flash.utils.getQualifiedClassName
+  import flash.utils.setTimeout
 
   public class Sprite extends flash.display.Sprite {
     public function Sprite() {
-      if (process === null) {
-        const env: Object = loaderInfo.parameters
+      stage.scaleMode = StageScaleMode.NO_SCALE
+      stage.align = StageAlign.TOP_LEFT
 
-        env["stdio.interactive"] = String(this is Interactive)
-
-        process = new StandardProcess(env)
-        process.initialize(function (): void {
-          add_error_handler()
-          start()
-        })
-      } else {
-        start()
-      }
+      // Let the subclass constructor run first.
+      setTimeout(initialize, 0)
     }
 
-    private function add_error_handler(): void {
-      loaderInfo.uncaughtErrorEvents.addEventListener(
-        UncaughtErrorEvent.UNCAUGHT_ERROR, process.handle
-      )
+    private function initialize(): void {
+      setup(loaderInfo, this, start)
     }
 
     private function start(): void {

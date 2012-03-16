@@ -8,10 +8,12 @@ package {
         process.puts(line)
         process.exit(Number(process.argv[0]))
       })
+    } else if (/\d+/.test(process.env.foo)) {
+      const url: String = "http://localhost:" + process.env.foo
+
+      new URLLoader().load(new URLRequest(url))
     } else {
-      new URLLoader().load(new URLRequest(
-        "http://localhost:" + process.env.foo
-      ))
+      process.warn("foo parameter missing or invalid")
     }
   }
 }

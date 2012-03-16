@@ -1,6 +1,6 @@
 package stdio {
   public interface Process {
-    function get env(): Object
+    function get env(): *
     function get argv(): Array
 
     function initialize(callback: Function): void

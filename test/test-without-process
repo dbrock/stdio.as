@@ -13,7 +13,7 @@ require("../bind-to-random-port.js")(server, function (port) {
   ])
 })
 
-setTimeout(fail, 10000)
+setTimeout(fail, 20000)
 
 function pass() {
   console.log("ok - " + swf + " without process")
