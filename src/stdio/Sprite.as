@@ -5,8 +5,10 @@ package stdio {
 
   public class Sprite extends flash.display.Sprite {
     public function Sprite() {
-      stage.scaleMode = StageScaleMode.NO_SCALE
-      stage.align = StageAlign.TOP_LEFT
+      if (stage) {
+        stage.scaleMode = StageScaleMode.NO_SCALE
+        stage.align = StageAlign.TOP_LEFT
+      }
 
       // Let the subclass constructor run first.
       setTimeout(initialize, 0)
