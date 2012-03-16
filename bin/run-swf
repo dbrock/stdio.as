@@ -31,7 +31,7 @@ function warn() {
 
 function die(error) {
   warn.apply(null, arguments)
-  process.exit(-1)
+  shutdown(-1)
 }
 
 //--------------------------------------------------------------------
@@ -67,20 +67,64 @@ function die_with_usage() {
 //--------------------------------------------------------------------
 // Low-level entry-point
 //--------------------------------------------------------------------
-var flashplayer_process, http_server
-var stdio_sockets = []
-
 // Pause standard input until we’re connected to the Flash process.
 process.stdin.pause()
 
-process.on("SIGINT", function () {
-  process.stderr.write("\n")
-  process.exit(1)
-})
+var flashplayer_process
+var servers = []
+var sockets = []
+var exit_code
 
 process.on("exit", function () {
-  if (flashplayer_process) {
-    flashplayer_process.kill("SIGKILL")
+  process.exit(exit_code)
+})
+
+function shutdown(code) {
+  if (exit_code === undefined) {
+    exit_code = code === undefined ? -1 : code
+    trace("shutting down (exit code %d)", exit_code)
+
+    // Avoid race conditions by shutting everything down properly
+    // instead of invoking the brute force `process.exit()`.
+    process.stdin.pause()
+
+    if (flashplayer_process) {
+      flashplayer_process.kill()
+    }
+
+    servers.forEach(try_close)
+    sockets.forEach(try_end)
+  }
+}
+
+function try_close(server) {
+  if (server) {
+    try {
+      server.close()
+    } catch (error) {
+    }
+  }
+}
+
+function try_end(stream) {
+  if (stream) {
+    try {
+      stream.end()
+    } catch (error) {
+    }
+  }
+}
+
+var user_wants_out
+
+process.on("SIGINT", function () {
+  process.stderr.write("\n")
+
+  if (user_wants_out) {
+    process.exit(-1)
+  } else {
+    user_wants_out = true
+    die("Ctrl-C again to kill")
   }
 })
 
@@ -98,7 +142,7 @@ if (process.argv.length >= 3) {
 // Main entry point
 //--------------------------------------------------------------------
 function run_swf(swf_filename, argv) {
-  http_server = open_http_server(swf_filename, function (http_port) {
+  open_http_server(swf_filename, function (http_port) {
     var url = fmt("http://localhost:%s", http_port)
     var env = process.env
 
@@ -135,77 +179,21 @@ function run_flashplayer(swf_url, parameters) {
       trace("flashplayer %s", url)
 
       flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
+      trace("flashplayer pid: " + flashplayer_process.pid)
 
       flashplayer_process.stderr.on("data", log_flashplayer_output)
       flashplayer_process.stdout.on("data", log_flashplayer_output)
 
+      flashplayer_process.on("error", function (error) {
+        die("%s", error)
+      }).on("exit", function () {
+        shutdown()
+      })
+
       function log_flashplayer_output(data) {
         console.warn("flashplayer: " + data)
       }
-
-      flashplayer_process.on("error", function (error) {
-        die("%s", error)
-      })
-
-      flashplayer_process.on("exit", function () {
-        process.exit()
-      })
     })
-  }
-}
-
-//--------------------------------------------------------------------
-// Error handling
-//--------------------------------------------------------------------
-function dump_runtime_error(data) {
-  var lines = data.split(/\r?\n/)
-  var message = get_pretty_error_message(lines.shift())
-
-  draw_horizontal_rule()
-
-  lines.forEach(function (line, index) {
-    var match = line.match(/([^:\/\[]+)\[(.*):(\d+)\]/)
-
-    if (match) {
-      var method = match[1]
-      var filename = Path.relative(process.cwd(), match[2])
-      var line_number = match[3]
-      var text = index === 0 ? fmt("error: %s ", message) : ""
-      var content = fmt("%s:%s: %s", filename, line_number, text)
-      var suffix = fmt(" in %s", method)
-      var pad_length = Math.max(0, 80 - content.length - suffix.length)
-      var padding = repeat(" ", pad_length)
-
-      console.warn(content + padding + suffix)
-    } else {
-      if (index === 0) {
-        console.warn("error: %s", message)
-      }
-
-      console.warn(line)
-    }
-  })
-
-  function repeat(string, n) {
-    return new Array(n + 1).join(string)
-  }
-
-  function draw_horizontal_rule() {
-    console.warn(repeat("\u2014", 80))
-  }
-}
-
-function get_pretty_error_message(message) {
-  var match
-
-  if (message === "TypeError: Error #1009: Cannot access a property or method of a null object reference.") {
-    return "null pointer"
-  } else if ((match = message.match(/^ArgumentError: Error #1063: Argument count mismatch on .*\. Expected (\d+), got (\d+)\.$/))) {
-    return fmt("expected %d arguments, got %d", match[1], match[2])
-  } else if ((match = message.match(/^IOErrorEvent: Error #2032: Stream Error. URL: (.*)$/))) {
-    return inspect(match[1]) + ": URL not available"
-  } else {
-    return message.replace(/^Error: /i, "")
   }
 }
 
@@ -215,10 +203,11 @@ function get_pretty_error_message(message) {
 function open_http_server(swf_filename, callback) {
   var swf_file = FS.createReadStream(swf_filename)
 
-  swf_file.pause()
   swf_file.on("error", function (error) {
     die("%s", error)
-  })
+  }).on("end", function () {
+    trace("file read complete")
+  }).pause()
 
   var routes = {
     "GET /favicon.ico": function (request, response) {
@@ -246,6 +235,7 @@ function open_http_server(swf_filename, callback) {
     "POST /shell": function (request, response, errback) {
       slurp(request, function (command) {
         trace("shell command: %s", command)
+
         ChildProcess.exec(command, function (error, stdout, stderr) {
           var status = error === null ? 0 : error.code
 
@@ -271,7 +261,7 @@ function open_http_server(swf_filename, callback) {
     "POST /exit": function (request, response, errback) {
       slurp(request, function (data) {
         if (data.match(/^-?\d+$/)) {
-          process.exit(parseInt(data))
+          shutdown(Number(data))
         } else {
           errback("Bad exit status: " + data)
         }
@@ -300,7 +290,7 @@ function open_http_server(swf_filename, callback) {
     callback(port)
   })
 
-  return server
+  servers.push(server)
 }
 
 function open_stdio_servers(callback) {
@@ -310,12 +300,10 @@ function open_stdio_servers(callback) {
     process.stdin.resume()
   }, function (stdin_port) {
     open_one_off_server(function (socket) {
-      stdio_sockets.push(socket)
       trace("got stdout connection")
       socket.pipe(process.stdout)
     }, function (stdout_port) {
       open_one_off_server(function (socket) {
-        stdio_sockets.push(socket)
         trace("got stderr connection")
         socket.pipe(process.stderr)
       }, function (stderr_port) {
@@ -398,18 +386,75 @@ function open_readline_server(callback) {
   })
 }
 
-//--------------------------------------------------------------------
-// Utility functions
-//--------------------------------------------------------------------
 function open_one_off_server(handler, callback) {
   var server = Net.createServer(function (socket) {
     server.close()
     handler(socket)
   })
 
-  return bind_to_random_port(server, callback)
+  bind_to_random_port(server, callback)
+
+  servers.push(server)
 }
 
+//--------------------------------------------------------------------
+// Error handling
+//--------------------------------------------------------------------
+function dump_runtime_error(data) {
+  var lines = data.split(/\r?\n/)
+  var message = get_pretty_error_message(lines.shift())
+
+  draw_horizontal_rule()
+
+  lines.forEach(function (line, index) {
+    var match = line.match(/([^:\/\[]+)\[(.*):(\d+)\]/)
+
+    if (match) {
+      var method = match[1]
+      var filename = Path.relative(process.cwd(), match[2])
+      var line_number = match[3]
+      var text = index === 0 ? fmt("error: %s ", message) : ""
+      var content = fmt("%s:%s: %s", filename, line_number, text)
+      var suffix = fmt(" in %s", method)
+      var pad_length = Math.max(0, 80 - content.length - suffix.length)
+      var padding = repeat(" ", pad_length)
+
+      console.warn(content + padding + suffix)
+    } else {
+      if (index === 0) {
+        console.warn("error: %s", message)
+      }
+
+      console.warn(line)
+    }
+  })
+
+  function repeat(string, n) {
+    return new Array(n + 1).join(string)
+  }
+
+  function draw_horizontal_rule() {
+    console.warn(repeat("\u2014", 80))
+  }
+}
+
+function get_pretty_error_message(message) {
+  var match
+
+  if (message === "TypeError: Error #1009: Cannot access a property or method of a null object reference.") {
+    return "null pointer"
+  } else if ((match = message.match(/^ArgumentError: Error #1063: Argument count mismatch on .*\. Expected (\d+), got (\d+)\.$/))) {
+    return fmt("expected %d arguments, got %d", match[1], match[2])
+  } else if ((match = message.match(/^IOErrorEvent: Error #2032: Stream Error. URL: (.*)$/))) {
+    return inspect(match[1]) + ": URL not available"
+  } else {
+    return message.replace(/^Error: /i, "")
+  }
+}
+
+//--------------------------------------------------------------------
+// Utility functions
+//--------------------------------------------------------------------
 function slurp(stream, callback) {
   var result = ""
 
