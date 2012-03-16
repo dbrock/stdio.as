@@ -8,9 +8,9 @@ var child
 var server = require("http").createServer(pass)
 
 require("../bind-to-random-port.js")(server, function (port) {
-  child = require("child_process").spawn(
-    executable, [swf + "?foo=" + port]
-  )
+  child = require("child_process").spawn(executable, [
+    "file://" + encodeURI(require("path").resolve(swf)) + "?foo=" + port
+  ])
 })
 
 setTimeout(fail, 10000)
