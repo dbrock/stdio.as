@@ -2,7 +2,7 @@ package {
   import stdio.*
 
   [SWF(width=0, height=0)]
-  public class interactive_test extends Sprite implements Interactive {
+  public class interactive_test extends Sprite {
     public function main(): void {
       process.puts("What’s your name?")
       process.prompt = process.style("bold", "name> ")
