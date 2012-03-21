@@ -85,11 +85,15 @@ package stdio {
     }
 
     public function get argv(): Array {
-      return env["stdio.argv"].split(" ").map(
-        function (argument: String, ...rest: Array): String {
-          return decodeURIComponent(argument)
-        }
-      )
+      if (env["stdio.argv"] === "") {
+        return []
+      } else {
+        return env["stdio.argv"].split(" ").map(
+          function (argument: String, ...rest: Array): String {
+            return decodeURIComponent(argument)
+          }
+        )
+      }
     }
 
     public function puts(value: *): void {
