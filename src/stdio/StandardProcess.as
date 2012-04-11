@@ -201,7 +201,7 @@ package stdio {
       }
     }
 
-    public function shell(
+    public function exec(
       command: *,
       callback: Function,
       errback: Function = null

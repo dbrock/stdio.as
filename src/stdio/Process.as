@@ -19,7 +19,7 @@ package stdio {
     function get stdout(): OutputStream
     function get stderr(): OutputStream
 
-    function shell(
+    function exec(
       command: *,
       callback: Function,
       errback: Function = null
