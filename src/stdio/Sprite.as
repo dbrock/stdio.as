@@ -8,10 +8,10 @@ package stdio {
       if (stage) {
         stage.scaleMode = StageScaleMode.NO_SCALE
         stage.align = StageAlign.TOP_LEFT
-      }
 
-      // Let the subclass constructor run first.
-      setTimeout(initialize, 0)
+        // Let the subclass constructor run first.
+        setTimeout(initialize, 0)
+      }
     }
 
     private function initialize(): void {
