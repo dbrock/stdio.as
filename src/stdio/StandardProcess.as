@@ -182,7 +182,7 @@ package stdio {
       if (error is UncaughtErrorEvent) {
         UncaughtErrorEvent(error).preventDefault()
         handle(UncaughtErrorEvent(error).error)
-        die("run-swf: uncaught error")
+        exit(-1)
       } else if (error is Error) {
         // Important: Avoid the `Error(x)` casting syntax.
         http_post("/error", (error as Error).getStackTrace())
