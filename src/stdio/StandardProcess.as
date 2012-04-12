@@ -218,15 +218,13 @@ package stdio {
           }
         }
 
-        if (command is Array) {
-          command = "sh -c " + shell_quote(command.map(
-            function (word: String, ...rest: Array): String {
-              return shell_quote(word)
-            }
-          ).join(" "))
+        if (command is String) {
+          command = ["sh", "-c", command]
         }
 
-        const url: String = "/exec?" + encodeURIComponent(command)
+        const url: String = "/exec?" + map(
+          command, encodeURIComponent
+        ).join("&")
 
         http_post(url, stdin, function (data: String): void {
           const result: XML = new XML(data)

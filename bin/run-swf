@@ -233,11 +233,12 @@ function open_http_server(swf_filename, callback) {
     },
 
     "POST /exec": function (request, response, errback) {
-      var args = request.url.replace(/.*\?(.*)/, "$1").split(" ")
+      var args = request.url.replace(/.*\?(.*)/, "$1")
+        .split("&").map(decodeURIComponent)
 
       trace("exec %s", JSON.stringify(args))
 
-      var command = words.shift()
+      var command = args.shift()
       var child = ChildProcess.spawn(command, args)
       var stdout = "", stderr = ""
 
