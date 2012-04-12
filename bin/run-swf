@@ -485,10 +485,5 @@ function slurp(stream, callback) {
 }
 
 function xml_escape(string) {
-  return string
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
+  return "<![CDATA[" + string.replace(/\]\]>/g, "]]>]]&gt;<![CDATA[") + "]]>"
 }
