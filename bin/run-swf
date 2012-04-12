@@ -281,7 +281,7 @@ function open_http_server(swf_filename, callback) {
     }
 
     function fail(message) {
-      die("HTTP %s: %s", action, + message)
+      die("HTTP %s: %s", action, message)
     }
   })
 
