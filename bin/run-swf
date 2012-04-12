@@ -418,28 +418,32 @@ function dump_runtime_error(data) {
 
   draw_horizontal_rule()
 
-  lines.forEach(function (line, index) {
-    var match = line.match(/([^:\/\[]+)\[(.*):(\d+)\]/)
+  if (lines.length === 0) {
+    console.warn("error: %s", message)
+  } else {
+    lines.forEach(function (line, index) {
+      var match = line.match(/([^:\/\[]+)\[(.*):(\d+)\]/)
 
-    if (match) {
-      var method = match[1]
-      var filename = Path.relative(process.cwd(), match[2])
-      var line_number = match[3]
-      var text = index === 0 ? fmt("error: %s ", message) : ""
-      var content = fmt("%s:%s: %s", filename, line_number, text)
-      var suffix = fmt(" in %s", method)
-      var pad_length = Math.max(0, 80 - content.length - suffix.length)
-      var padding = repeat(" ", pad_length)
+      if (match) {
+        var method = match[1]
+        var filename = Path.relative(process.cwd(), match[2])
+        var line_number = match[3]
+        var text = index === 0 ? fmt("error: %s ", message) : ""
+        var content = fmt("%s:%s: %s", filename, line_number, text)
+        var suffix = fmt(" in %s", method)
+        var pad_length = Math.max(0, 80 - content.length - suffix.length)
+        var padding = repeat(" ", pad_length)
 
-      console.warn(content + padding + suffix)
-    } else {
-      if (index === 0) {
-        console.warn("error: %s", message)
+        console.warn(content + padding + suffix)
+      } else {
+        if (index === 0) {
+          console.warn("error: %s", message)
+        }
+
+        console.warn(line)
       }
-
-      console.warn(line)
-    }
-  })
+    })
+  }
 
   function repeat(string, n) {
     return new Array(n + 1).join(string)
