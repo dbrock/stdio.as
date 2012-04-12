@@ -241,7 +241,7 @@ package stdio {
           } else if (errback === null) {
             warn(stderr)
           } else if (errback.length === 1) {
-            errback(status)
+            errback(new Error(stderr))
           } else if (errback.length === 2) {
             errback(status, stderr)
           } else {
