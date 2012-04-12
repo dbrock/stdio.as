@@ -232,22 +232,34 @@ function open_http_server(swf_filename, callback) {
       swf_file.resume()
     },
 
-    "POST /shell": function (request, response, errback) {
-      slurp(request, function (command) {
-        trace("shell command: %s", command)
+    "POST /exec": function (request, response, errback) {
+      var args = request.url.replace(/.*\?(.*)/, "$1").split(" ")
 
-        ChildProcess.exec(command, function (error, stdout, stderr) {
-          var status = error === null ? 0 : error.code
+      trace("exec %s", JSON.stringify(args))
 
-          trace("shell command result: %j", [status, stdout, stderr])
+      var command = words.shift()
+      var child = ChildProcess.spawn(command, args)
+      var stdout = "", stderr = ""
 
-          response.writeHead(200, { "Content-Type": "text/xml" })
-          response.write(fmt('<result status="%s">\n', status))
-          response.write(fmt('  <stdout>%s</stdout>\n', xml_escape(stdout)))
-          response.write(fmt('  <stderr>%s</stderr>\n', xml_escape(stderr)))
-          response.write(fmt('</result>\n'))
-          response.end()
-        })
+      request.pipe(child.stdin)
+
+      child.stdout.on("data", function (data) {
+        stdout += data
+      })
+
+      child.stderr.on("data", function (data) {
+        stderr += data
+      })
+
+      child.on("exit", function (status) {
+        trace("shell command result: %j", [status, stdout, stderr])
+
+        response.writeHead(200, { "Content-Type": "text/xml" })
+        response.write(fmt('<result status="%s">\n', status))
+        response.write(fmt('  <stdout>%s</stdout>\n', xml_escape(stdout)))
+        response.write(fmt('  <stderr>%s</stderr>\n', xml_escape(stderr)))
+        response.write(fmt('</result>\n'))
+        response.end()
       })
     },
 

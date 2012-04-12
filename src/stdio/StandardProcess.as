@@ -206,16 +206,29 @@ package stdio {
       callback: Function,
       errback: Function = null
     ): void {
+      var stdin: String = ""
+
       if (available) {
+        if (isPlainObject(command)) {
+          if ("command" in command && "stdin" in command) {
+            stdin = command.stdin
+            command = command.command
+          } else {
+            throw new Error("bad command object: %i", command)
+          }
+        }
+
         if (command is Array) {
-          command = command.map(
+          command = "sh -c " + shell_quote(command.map(
             function (word: String, ...rest: Array): String {
               return shell_quote(word)
             }
-          ).join(" ")
+          ).join(" "))
         }
 
-        http_post("/shell", command, function (data: String): void {
+        const url: String = "/exec?" + encodeURIComponent(command)
+
+        http_post(url, stdin, function (data: String): void {
           const result: XML = new XML(data)
           const status: int = result.@status
           const stdout: String = result.stdout.text()
