@@ -206,9 +206,9 @@ package stdio {
       callback: Function,
       errback: Function = null
     ): void {
-      var stdin: String = ""
-
       if (available) {
+        var stdin: String = ""
+
         if (isPlainObject(command)) {
           if ("command" in command && "stdin" in command) {
             stdin = command.stdin

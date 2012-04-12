@@ -263,6 +263,11 @@ function open_http_server(swf_filename, callback) {
       })
     },
 
+    // Flash Player cannot send POST requests with empty bodies.
+    "GET /exec": function (request, response, errback) {
+      this["POST /exec"](request, response, errback)
+    },
+
     "POST /error": function (request, response, errback) {
       slurp(request, function (data) {
         dump_runtime_error(data)
@@ -289,7 +294,7 @@ function open_http_server(swf_filename, callback) {
     if (action in routes) {
       routes[action](request, response, fail)
     } else {
-      fail("unexpected")
+      fail("unexpected request")
     }
 
     function fail(message) {
