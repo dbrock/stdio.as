@@ -1,8 +1,10 @@
+FCSHC=fcshc -X-target-player=10.1
+
 default: test
 build:
-	fcshc -o tmp/flash_test.swf src test/flash_test.as --no-rsls
-	fcshc -o tmp/flex_test.swf src test/flex_test.mxml
-	fcshc -o tmp/interactive_test.swf src test/interactive_test.as --no-rsls
+	$(FCSHC) -o tmp/flash_test.swf src test/flash_test.as --no-rsls
+	$(FCSHC) -o tmp/flex_test.swf src test/flex_test.mxml
+	$(FCSHC) -o tmp/interactive_test.swf src test/interactive_test.as --no-rsls
 test: build
 	test/test-with-process tmp/flash_test.swf
 	test/test-without-process tmp/flash_test.swf
