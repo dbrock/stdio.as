@@ -1,6 +1,5 @@
 package stdio {
   import flash.events.Event
-  import flash.events.UncaughtErrorEvent
   import spark.components.Application
 
   [Event(name="main")]

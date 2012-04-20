@@ -209,21 +209,19 @@ package stdio {
       if (available) {
         var stdin: String = ""
 
-        if (isPlainObject(command)) {
-          if ("command" in command && "stdin" in command) {
-            stdin = command.stdin
-            command = command.command
-          } else {
-            throw new Error("bad command object: %i", command)
-          }
+        if ("command" in command && "stdin" in command) {
+          stdin = command.stdin
+          command = command.command
         }
 
         if (command is String) {
           command = ["sh", "-c", command]
         }
 
-        const url: String = "/exec?" + map(
-          command, encodeURIComponent
+        const url: String = "/exec?" + command.map(
+          function (word: String, ...rest: Array): String {
+            return encodeURIComponent(word)
+          }
         ).join("&")
 
         http_post(url, stdin, function (data: String): void {
