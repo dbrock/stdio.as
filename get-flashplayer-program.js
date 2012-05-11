@@ -1,6 +1,13 @@
+var inspect = require("util").inspect
+var path = require("path")
+
 module.exports = function (callback) {
   try_in_order([
     function (callback) {
+      if (process.env.RUN_SWF_VERBOSE) {
+        console.warn("run-swf: looking for $FLASHPLAYER...")
+      }
+
       if (process.env.FLASHPLAYER) {
         get_program(process.env.FLASHPLAYER, callback)
       } else {
@@ -12,21 +19,22 @@ module.exports = function (callback) {
     },
     function (callback) {
       get_osx_app_program("Flash Player", callback)
-    },
-    function (callback) {
-      die("no flashplayer executable found")
     }
   ], callback)
 
   function get_osx_app_program(name, callback) {
     get_program(
-      "/Applications/" + name + ".app/Contents/MacOS/" + name,
+      "/Applicationsa/" + name + ".app/Contents/MacOS/" + name,
       callback
     )
   }
 
   function get_program(filename, callback) {
-    require("path").exists(filename, function (exists) {
+    if (process.env.RUN_SWF_VERBOSE) {
+      console.warn("run-swf: looking for %s...", inspect(filename))
+    }
+
+    path.exists(filename, function (exists) {
       callback(exists ? filename : null)
     })
   }
@@ -34,7 +42,7 @@ module.exports = function (callback) {
 
 function try_in_order(functions, callback) {
   functions = [].slice.call(functions)
-  loop(function (loop) {
+  ;(function loop () {
     if (functions.length === 0) {
       callback(null)
     } else {
@@ -46,9 +54,5 @@ function try_in_order(functions, callback) {
         }
       })
     }
-  })
-}
-
-function loop(loop) {
-  loop(loop)
+  })()
 }

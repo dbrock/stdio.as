@@ -48,6 +48,7 @@ while (/^-/.test(process.argv[2])) {
 
   if (option === "--verbose") {
     verbose = true
+    process.env.RUN_SWF_VERBOSE = "true"
   } else if (option === "--no-stdio") {
     no_stdio = true
     trace("no-stdio mode")
@@ -175,23 +176,27 @@ function run_flashplayer(swf_url, parameters) {
     console.log("%s", url)
   } else {
     get_flashplayer_program(function (flashplayer_program) {
-      trace("using %s as Flash Player", inspect(flashplayer_program))
-      trace("flashplayer %s", url)
+      if (flashplayer_program) {
+        trace("using %s as Flash Player", inspect(flashplayer_program))
+        trace("flashplayer %s", url)
 
-      flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
-      trace("flashplayer pid: " + flashplayer_process.pid)
+        flashplayer_process = ChildProcess.spawn(flashplayer_program, [url])
+        trace("flashplayer pid: " + flashplayer_process.pid)
 
-      flashplayer_process.stderr.on("data", log_flashplayer_output)
-      flashplayer_process.stdout.on("data", log_flashplayer_output)
+        flashplayer_process.stderr.on("data", log_flashplayer_output)
+        flashplayer_process.stdout.on("data", log_flashplayer_output)
 
-      flashplayer_process.on("error", function (error) {
-        die("%s", error)
-      }).on("exit", function () {
-        shutdown()
-      })
+        flashplayer_process.on("error", function (error) {
+          die("%s", error)
+        }).on("exit", function () {
+          shutdown()
+        })
 
-      function log_flashplayer_output(data) {
-        console.warn("flashplayer: " + data)
+        function log_flashplayer_output(data) {
+          console.warn("flashplayer: " + data)
+        }
+      } else {
+        die("no flashplayer executable found; see --verbose")
       }
     })
   }
