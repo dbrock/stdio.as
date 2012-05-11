@@ -24,7 +24,7 @@ module.exports = function (callback) {
 
   function get_osx_app_program(name, callback) {
     get_program(
-      "/Applicationsa/" + name + ".app/Contents/MacOS/" + name,
+      "/Applications/" + name + ".app/Contents/MacOS/" + name,
       callback
     )
   }
