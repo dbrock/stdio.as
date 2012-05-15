@@ -187,7 +187,12 @@ package stdio {
         // Important: Avoid the `Error(x)` casting syntax.
         http_post("/error", (error as Error).getStackTrace())
       } else if (error is ErrorEvent) {
-        http_post("/error", (error as ErrorEvent).text)
+        const event: ErrorEvent = ErrorEvent(error)
+
+        http_post("/error", (
+          getQualifiedClassName(event) + ": " + event.text
+            + " [event.target: " + event.target + "]"
+        ))
       } else {
         http_post("/error", String(error))
       }
