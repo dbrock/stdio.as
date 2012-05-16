@@ -85,7 +85,7 @@ package stdio {
     }
 
     public function get argv(): Array {
-      if (env["stdio.argv"] === "") {
+      if (!env["stdio.argv"]) {
         return []
       } else {
         return env["stdio.argv"].split(" ").map(
