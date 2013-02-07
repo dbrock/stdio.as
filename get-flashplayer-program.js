@@ -1,5 +1,5 @@
 var inspect = require("util").inspect
-var path = require("path")
+var fs = require("fs")
 
 module.exports = function (callback) {
   try_in_order([
@@ -34,7 +34,7 @@ module.exports = function (callback) {
       console.warn("run-swf: looking for %s...", inspect(filename))
     }
 
-    path.exists(filename, function (exists) {
+    fs.exists(filename, function (exists) {
       callback(exists ? filename : null)
     })
   }
