@@ -1,0 +1,5 @@
+{
+  "name": "stdio.as",
+  "version": "0.0.0",
+  "bin": { "run-swf": "bin/run-swf" }
+}
